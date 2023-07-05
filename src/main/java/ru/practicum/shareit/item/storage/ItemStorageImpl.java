@@ -45,7 +45,7 @@ public class ItemStorageImpl implements ItemStorage {
     }
 
     public List<Item> getAllItemByUserId(Integer userId) {
-        return items.values().stream().filter(item -> item.getOwner().getId() == userId).collect(Collectors.toList());
+        return items.values().stream().filter(item -> Objects.equals(item.getOwner().getId(), userId)).collect(Collectors.toList());
     }
 
     public List<Item> searchByDescription(String text) {

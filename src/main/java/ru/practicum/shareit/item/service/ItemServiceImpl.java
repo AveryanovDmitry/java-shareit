@@ -11,6 +11,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,7 +59,7 @@ public class ItemServiceImpl implements ItemService {
 
     private void checkOwnerForUpdate(Item oldItem, Integer userId) {
         Integer idOwnerOldItem = oldItem.getOwner().getId();
-        if (idOwnerOldItem != userId) {
+        if (!Objects.equals(idOwnerOldItem, userId)) {
             throw new NotFoundException("Пользователь не хозяин этой вещи");
         }
     }

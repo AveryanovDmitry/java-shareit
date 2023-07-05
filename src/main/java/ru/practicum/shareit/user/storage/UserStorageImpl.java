@@ -8,6 +8,7 @@ import ru.practicum.shareit.user.model.User;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Repository
 public class UserStorageImpl implements UserStorage {
@@ -51,7 +52,8 @@ public class UserStorageImpl implements UserStorage {
     }
 
     private void checkEmail(User user) {
-        if (users.values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail()) && u.getId() != user.getId())) {
+        if (users.values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail())
+                && !Objects.equals(u.getId(), user.getId()))) {
             throw new EmailExeption("Пользователь с такой почтой уже существует");
         }
     }
