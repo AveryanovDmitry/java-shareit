@@ -1,7 +1,8 @@
 package ru.practicum.shareit.user.storage;
 
 import org.springframework.stereotype.Repository;
-import ru.practicum.shareit.user.exeptions.EmailExeption;
+import ru.practicum.shareit.exeptions.EmailExeption;
+import ru.practicum.shareit.exeptions.NotFoundException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
@@ -26,6 +27,9 @@ public class UserStorageImpl implements UserStorage {
     }
 
     public User getUserById(Integer id) {
+        if (!users.containsKey(id)) {
+            throw new NotFoundException("Пользователя с таким id не найдено");
+        }
         return users.get(id);
     }
 

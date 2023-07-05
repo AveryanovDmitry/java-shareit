@@ -1,9 +1,10 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.Data;
-import org.apache.catalina.User;
 import ru.practicum.shareit.request.ItemRequest;
+import ru.practicum.shareit.user.model.User;
 
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -12,7 +13,7 @@ import javax.validation.constraints.NotNull;
 @Data
 public class ItemDto {
     private Integer id;
-    @NotNull
+    @NotBlank
     private String name;
     @NotNull
     private String description;
