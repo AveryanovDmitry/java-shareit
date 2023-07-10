@@ -5,10 +5,7 @@ import ru.practicum.shareit.exeptions.EmailExeption;
 import ru.practicum.shareit.exeptions.NotFoundException;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Repository
 public class UserStorageImpl implements UserStorage {
@@ -20,18 +17,19 @@ public class UserStorageImpl implements UserStorage {
         checkEmail(user);
         user.setId(++id);
         users.put(id, user);
-        return users.get(id);
+        return user;
     }
 
     public Collection<User> getAllUsers() {
-        return users.values();
+        return List.copyOf(users.values());
     }
 
     public User getUserById(Integer id) {
-        if (!users.containsKey(id)) {
+        User user = users.get(id);
+        if (user == null) {
             throw new NotFoundException("Пользователя с таким id не найдено");
         }
-        return users.get(id);
+        return user;
     }
 
     public User deleteUserById(Integer id) {
@@ -42,13 +40,13 @@ public class UserStorageImpl implements UserStorage {
         user.setId(id);
         checkEmail(user);
         User updateUser = users.get(id);
-        if (user.getName() != null) {
+        if (user.getName() != null && !user.getName().isBlank()) {
             updateUser.setName(user.getName());
         }
-        if (user.getEmail() != null) {
+        if (user.getEmail() != null && !user.getEmail().isBlank()) {
             updateUser.setEmail(user.getEmail());
         }
-        return users.get(id);
+        return updateUser;
     }
 
     private void checkEmail(User user) {

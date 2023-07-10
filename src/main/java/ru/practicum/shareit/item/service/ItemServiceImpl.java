@@ -7,9 +7,9 @@ import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
 import ru.practicum.shareit.exeptions.NotFoundException;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -41,20 +41,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     public ItemDto updateItem(ItemDto itemDto, Integer itemId, Integer userId) {
-        checkOwner(userId);
+        userStorage.getUserById(userId);
+        checkOwnerForUpdate(itemStorage.getItemFromStorage(itemId), userId);
         Item newItem = itemMapper.toItem(itemDto);
         newItem.setId(itemId);
         newItem.setOwner(userStorage.getUserById(userId));
-        checkOwnerForUpdate(itemStorage.getItemFromStorage(itemId), userId);
         return itemMapper.toItemDto(itemStorage.updateItem(newItem));
-    }
-
-    private User checkOwner(Integer ownerId) {
-        User user = userStorage.getUserById(ownerId);
-        if (user == null) {
-            throw new NotFoundException("Пользователь с id " + ownerId + " не найден");
-        }
-        return user;
     }
 
     private void checkOwnerForUpdate(Item oldItem, Integer userId) {
@@ -64,8 +56,11 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    public List<ItemDto> searchItemsByDescription(String text) {
-        return itemStorage.searchByDescription(text.toLowerCase())
+    public List<ItemDto> searchItemsByText(String text) {
+        if (text.isBlank()) {
+            return Collections.emptyList();
+        }
+        return itemStorage.searchByText(text.toLowerCase())
                 .stream().map(itemMapper::toItemDto).collect(Collectors.toList());
     }
 }

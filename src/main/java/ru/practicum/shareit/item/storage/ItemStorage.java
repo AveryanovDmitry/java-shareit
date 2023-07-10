@@ -15,5 +15,5 @@ public interface ItemStorage {
 
     List<Item> getAllItemByUserId(Integer userId);
 
-    List<Item> searchByDescription(String text);
+    List<Item> searchByText(String text);
 }

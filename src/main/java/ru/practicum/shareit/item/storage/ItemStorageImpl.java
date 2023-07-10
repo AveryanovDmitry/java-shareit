@@ -10,11 +10,14 @@ import java.util.stream.Collectors;
 @Repository
 public class ItemStorageImpl implements ItemStorage {
     private int id = 0;
-    Map<Integer, Item> items = new HashMap<>();
+    private final Map<Integer, Item> items = new HashMap<>();
+
+    private final Map<Integer, List<Item>> userItemIndex = new LinkedHashMap<>();
 
     public Item addItemToStorage(Item item) {
         item.setId(++id);
         items.put(item.getId(), item);
+        userItemIndex.computeIfAbsent(item.getOwner().getId(), k -> new ArrayList<>()).add(item);
         return item;
     }
 
@@ -30,30 +33,28 @@ public class ItemStorageImpl implements ItemStorage {
     }
 
     public Item updateItem(Item item) {
-        Item oldItem = items.get(item.getId());
-        if (item.getName() == null) {
-            item.setName(oldItem.getName());
+        Item mutableItem = items.get(item.getId());
+        if (item.getName() != null && !item.getName().isBlank()) {
+            mutableItem.setName(item.getName());
         }
-        if (item.getDescription() == null) {
-            item.setDescription(oldItem.getDescription());
+        if (item.getDescription() != null && !item.getDescription().isBlank()) {
+            mutableItem.setDescription(item.getDescription());
         }
-        if (item.getAvailable() == null) {
-            item.setAvailable(oldItem.getAvailable());
+        if (item.getAvailable() != null) {
+            mutableItem.setAvailable(item.getAvailable());
         }
-        items.put(item.getId(), item);
-        return items.get(item.getId());
+        return mutableItem;
     }
 
     public List<Item> getAllItemByUserId(Integer userId) {
-        return items.values().stream().filter(item -> Objects.equals(item.getOwner().getId(), userId)).collect(Collectors.toList());
+        return userItemIndex.get(userId);
     }
 
-    public List<Item> searchByDescription(String text) {
-        if (text.isBlank()) {
-            return Collections.emptyList();
-        }
+    public List<Item> searchByText(String text) {
         return items.values().stream()
-                .filter(item -> item.getDescription().toLowerCase().contains(text) && item.getAvailable())
+                .filter(item -> (item.getDescription().toLowerCase().contains(text)
+                        || item.getName().equals(text))
+                        && item.getAvailable())
                 .collect(Collectors.toList());
     }
 }
