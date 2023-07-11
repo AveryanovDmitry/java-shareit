@@ -11,12 +11,15 @@ import java.util.*;
 public class UserStorageImpl implements UserStorage {
     private final Map<Integer, User> users = new HashMap<>();
 
+    private final Set<String> emails = new HashSet<>();
+
     private int id = 0;
 
     public User addUserToStorage(User user) {
         checkEmail(user);
         user.setId(++id);
         users.put(id, user);
+        emails.add(user.getEmail());
         return user;
     }
 
@@ -33,6 +36,7 @@ public class UserStorageImpl implements UserStorage {
     }
 
     public User deleteUserById(Integer id) {
+        emails.remove(users.get(id).getEmail());
         return users.remove(id);
     }
 
@@ -44,14 +48,16 @@ public class UserStorageImpl implements UserStorage {
             updateUser.setName(user.getName());
         }
         if (user.getEmail() != null && !user.getEmail().isBlank()) {
+            emails.remove(updateUser.getEmail());
+            emails.add(user.getEmail());
             updateUser.setEmail(user.getEmail());
         }
         return updateUser;
     }
 
     private void checkEmail(User user) {
-        if (users.values().stream().anyMatch(u -> u.getEmail().equals(user.getEmail())
-                && !Objects.equals(u.getId(), user.getId()))) {
+        if (emails.contains(user.getEmail())
+                && (user.getId() == null || !users.get(user.getId()).getEmail().equals(user.getEmail()))) {
             throw new EmailExeption("Пользователь с такой почтой уже существует");
         }
     }

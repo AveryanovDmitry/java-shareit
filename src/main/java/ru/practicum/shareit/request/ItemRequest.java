@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class ItemRequest {
-    Integer id;
-    String description;
-    User requestor;
-    LocalDateTime created;
+    private Integer id;
+    private String description;
+    private User requestor;
+    private LocalDateTime created;
 }

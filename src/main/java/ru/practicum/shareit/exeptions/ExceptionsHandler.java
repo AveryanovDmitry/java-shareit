@@ -16,7 +16,6 @@ public class ExceptionsHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<String, String> handleNotFoundExceptionHandler(NotFoundException exception) {
         log.info(exception.getMessage());
-        exception.printStackTrace();
         return Map.of("error", "Not found",
                 "errorMessage", exception.getMessage());
     }
@@ -25,7 +24,13 @@ public class ExceptionsHandler {
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleEmailExceptionHandler(EmailExeption exception) {
         log.info(exception.getMessage());
-        exception.printStackTrace();
+        return Map.of("error", exception.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleEmailExceptionHandler(Throwable exception) {
+        log.info(exception.getMessage());
         return Map.of("error", exception.getMessage());
     }
 }

@@ -52,9 +52,8 @@ public class ItemStorageImpl implements ItemStorage {
 
     public List<Item> searchByText(String text) {
         return items.values().stream()
-                .filter(item -> (item.getDescription().toLowerCase().contains(text)
-                        || item.getName().equals(text))
-                        && item.getAvailable())
+                .filter(item -> item.getAvailable() && (item.getDescription().toLowerCase().contains(text)
+                        || item.getName().toLowerCase().contains(text)))
                 .collect(Collectors.toList());
     }
 }
