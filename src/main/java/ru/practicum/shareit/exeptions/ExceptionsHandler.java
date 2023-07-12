@@ -28,8 +28,8 @@ public class ExceptionsHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, String> handleEmailExceptionHandler(Throwable exception) {
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<String, String> handleServerErrorExceptionHandler(Throwable exception) {
         log.info(exception.getMessage());
         return Map.of("error", exception.getMessage());
     }
