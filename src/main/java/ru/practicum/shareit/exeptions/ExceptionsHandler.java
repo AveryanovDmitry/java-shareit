@@ -2,6 +2,7 @@ package ru.practicum.shareit.exeptions;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -20,7 +21,7 @@ public class ExceptionsHandler {
                 "errorMessage", exception.getMessage());
     }
 
-    @ExceptionHandler
+    @ExceptionHandler(EmailExeption.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Map<String, String> handleEmailExceptionHandler(EmailExeption exception) {
         log.info(exception.getMessage());
@@ -31,6 +32,13 @@ public class ExceptionsHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleServerErrorExceptionHandler(Throwable exception) {
         log.info(exception.getMessage());
+        return Map.of("error", exception.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    private Map<String, String> handleBadRequestException(MethodArgumentNotValidException exception) {
+        log.debug(exception.getMessage());
         return Map.of("error", exception.getMessage());
     }
 }
