@@ -30,20 +30,20 @@ public class UserController {
     }
 
     @GetMapping("{id}")
-    public UserDto getUserById(@PathVariable Integer id) {
+    public UserDto getUserById(@PathVariable Long id) {
         log.info("Получен запрос на получение пользователя по id");
         return userService.getUserById(id);
     }
 
     @DeleteMapping("{id}")
-    public UserDto deleteUserById(@PathVariable Integer id) {
+    public void deleteUserById(@PathVariable Long id) {
         log.info("Получен запрос на удаление пользователя по id");
-        return userService.deleteUserById(id);
+        userService.deleteUserById(id);
+        log.info("Пользователь с id {} успешно удалён", id);
     }
 
     @PatchMapping("{id}")
-    public UserDto updateUserById(@Validated(UserDto.Update.class) @RequestBody UserDto user,
-                                  @PathVariable Integer id) {
+    public UserDto updateUserById(@Validated(UserDto.Update.class) @RequestBody UserDto user, @PathVariable Long id) {
         log.info("Получен запрос на обновление пользователя по id");
         return userService.updateUserById(user, id);
     }

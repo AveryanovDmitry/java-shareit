@@ -14,7 +14,7 @@ public class UserDto {
     public interface Update {
     }
 
-    private Integer id;
+    private Long id;
     @NotBlank(groups = {Create.class})
     private String name;
     @Email(groups = {Create.class, Update.class})
