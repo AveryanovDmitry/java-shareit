@@ -8,8 +8,6 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
-    List<Item> findAllByOwner(Long owner);
-
     @Query(value = "SELECT it " +
             "FROM Item as it " +
             "WHERE lower(it.name) LIKE lower(concat('%',:text,'%')) " +

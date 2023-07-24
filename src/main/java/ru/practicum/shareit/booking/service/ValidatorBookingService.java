@@ -2,7 +2,7 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.booking.dto.BookingDtoCreateNew;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exeptions.BookingException;
@@ -16,6 +16,7 @@ import java.util.Objects;
 
 @RequiredArgsConstructor
 @Component
+@Transactional(readOnly = true)
 class ValidatorBookingService {
     private final ItemRepository itemRepository;
 
@@ -30,13 +31,6 @@ class ValidatorBookingService {
             throw new BookingException("Бронируемая вещь недоступна");
         }
         return item;
-    }
-
-    BookingDtoCreateNew validateStartAndEndBooking(BookingDtoCreateNew newBooking) {
-        if (!newBooking.getStart().isBefore(newBooking.getEnd())) {
-            throw new BookingException("Время старта аренды не может быть позже конца аренды");
-        }
-        return newBooking;
     }
 
     User getBookingUser(Long userId) {

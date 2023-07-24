@@ -3,6 +3,7 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingDtoCreateNew;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingMapper bookingMapper;
@@ -29,10 +31,11 @@ public class BookingServiceImpl implements BookingService {
 
     private static final Sort SORT_BY_START_DESC = Sort.by(Sort.Direction.DESC, "start");
 
+    @Transactional
     public BookingDto createBooking(BookingDtoCreateNew newBooking, Long bookerId) {
         Item item = validator.validateItemBooking(newBooking.getItemId());
         User user = validator.getBookingUser(bookerId);
-        Booking booking = bookingMapper.fromDtoNewCreateToModel(validator.validateStartAndEndBooking(newBooking));
+        Booking booking = bookingMapper.fromDtoNewCreateToModel(newBooking);
         validator.validBookerAsOwner(bookerId, item);
         booking.setBooker(user);
         booking.setItem(item);
@@ -40,6 +43,7 @@ public class BookingServiceImpl implements BookingService {
         return bookingMapper.fromBookingToDto(bookingRepository.save(booking));
     }
 
+    @Transactional
     public BookingDto approveOrRejected(Long bookingId, boolean approved, long userId) {
         validator.getBookingUser(userId);
         Booking booking = validator.getBooking(bookingId);

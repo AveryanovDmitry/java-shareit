@@ -1,12 +1,16 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 
-@Data
 @Entity
 @Table(name = "items")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@EqualsAndHashCode(exclude = {"name", "description", "available", "owner"})
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
