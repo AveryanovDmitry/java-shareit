@@ -10,10 +10,9 @@ import java.time.LocalDateTime;
 
 @Data
 @ValidateStartAndEndBooking
-public class BookingDtoCreateNew {
-    private Long id;
+public class NewBooking {
+    @NotNull
     private Long itemId;
-    private Long userId;
     @NotNull
     @FutureOrPresent
     private LocalDateTime start;

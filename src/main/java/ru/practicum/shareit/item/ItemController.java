@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.CreateCommentDto;
@@ -25,7 +26,8 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto createItem(@Valid @RequestBody CreateUpdateItemDto itemDto, @RequestHeader(OWNER_ID) Long ownerId) {
+    public ItemDto createItem(@Validated(CreateUpdateItemDto.Create.class) @RequestBody CreateUpdateItemDto itemDto,
+                              @RequestHeader(OWNER_ID) Long ownerId) {
         log.info("Получен запрос создания новой вещи");
         return itemService.createItem(itemDto, ownerId);
     }
@@ -43,7 +45,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestBody CreateUpdateItemDto itemDto, @PathVariable Long itemId,
+    public ItemDto updateItem(@Valid @RequestBody CreateUpdateItemDto itemDto, @PathVariable Long itemId,
                               @RequestHeader(OWNER_ID) Long userId) {
         log.info("Получен запрос обновления вещи по id");
         return itemService.updateItem(itemDto, itemId, userId);

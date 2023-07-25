@@ -8,14 +8,17 @@ import javax.validation.constraints.Size;
 
 @Data
 public class CreateUpdateItemDto {
-    @NotBlank
+    public interface Create {
+    }
+
+    @NotBlank(groups = {Create.class})
     @Size(max = 255)
     private String name;
 
-    @NotBlank
+    @NotBlank(groups = {Create.class})
     @Size(max = 1000)
     private String description;
 
-    @NotNull
+    @NotNull(groups = {Create.class})
     private Boolean available;
 }

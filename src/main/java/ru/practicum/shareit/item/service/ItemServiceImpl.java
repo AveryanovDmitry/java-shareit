@@ -60,45 +60,58 @@ public class ItemServiceImpl implements ItemService {
         ItemDto itemDto = itemMapper.toItemDto(item);
 
         if (Objects.equals(item.getOwner(), userId)) {
-            List<BookingDtoShort> bookings = bookingRepository.findByItemIdAndStatus(itemId, StatusBooking.APPROVED,
-                            Sort.by(Sort.Direction.ASC, "start")).stream()
+            Map<Long, List<BookingDtoShort>> bookings = bookingRepository
+                    .findByItemIdAndStatus(itemId, Sort.by(Sort.Direction.ASC, "start"))
+                    .stream()
                     .map(bookingMapper::fromDtoToShort)
-                    .collect(toList());
-            findLastAndNextBookings(itemDto, bookings, LocalDateTime.now());
+                    .collect(groupingBy(booking -> booking.getItem().getId(), toList()));
+
+            findLastAndNextBookings(itemDto, bookings.getOrDefault(itemDto.getId(), Collections.emptyList()),
+                    LocalDateTime.now());
         }
 
-        List<Comment> comments = commentRepository.findAllByItemId(itemId,
-                Sort.by(Sort.Direction.ASC, "created"));
-        List<CommentDto> commentsDto = comments.stream()
+        itemDto.setComments(commentRepository.findAllByItemId(itemId,
+                        Sort.by(Sort.Direction.ASC, "created")).stream()
                 .map(commentMapper::fromCommentToDto)
-                .collect(toList());
-        itemDto.setComments(commentsDto);
+                .collect(toList()));
         return itemDto;
     }
 
     public List<ItemDto> getAllItemFromStorageByUserId(Long userId) {
         List<Item> items = itemRepository.findAllByOwnerOrderById(userId);
-        List<ItemDto> itemsDto = items.stream()
-                .map(itemMapper::toItemDto)
-                .collect(toList());
+        List<ItemDto> itemsDto = items.stream().map(itemMapper::toItemDto).collect(toList());
 
-        List<BookingDtoShort> bookings = bookingRepository
+        Map<Long, List<BookingDtoShort>> bookings = bookingRepository
                 .findAllByItemOwnerWhereStatusApproved(userId, Sort.by(Sort.Direction.ASC, "start"))
                 .stream()
                 .map(bookingMapper::fromDtoToShort)
-                .collect(toList());
+                .collect(groupingBy(booking -> booking.getItem().getId(), toList()));
 
-        Map<Item, List<Comment>> comments = commentRepository.findByItemIn(items, Sort.by(DESC, "created"))
+        Map<Long, List<Comment>> comments = commentRepository.findByItemIn(items, Sort.by(DESC, "created"))
                 .stream()
-                .collect(groupingBy(Comment::getItem, toList()));
+                .collect(groupingBy(comment -> comment.getItem().getId(), toList()));
 
-        LocalDateTime now = LocalDateTime.now();
         itemsDto.forEach(itemDto -> {
-            findLastAndNextBookings(itemDto, bookings, now);
-            findComments(itemDto, comments.getOrDefault(itemMapper.toItem(itemDto), Collections.emptyList()));
+            findLastAndNextBookings(itemDto, bookings.getOrDefault(itemDto.getId(), Collections.emptyList())
+                    , LocalDateTime.now());
+
+            itemDto.setComments(comments.getOrDefault(itemDto.getId(), Collections.emptyList())
+                    .stream()
+                    .map(commentMapper::fromCommentToDto)
+                    .collect(toList()));
         });
 
         return itemsDto;
+    }
+
+    private void findLastAndNextBookings(ItemDto itemDto, List<BookingDtoShort> bookings, LocalDateTime now) {
+        bookings.stream()
+                .filter(booking -> booking.getStart().isAfter(now))
+                .findFirst().ifPresent(itemDto::setNextBooking);
+
+        itemDto.setLastBooking(bookings.stream()
+                .filter(booking -> !booking.getStart().isAfter(now))
+                .reduce((a, b) -> b).orElse(null));
     }
 
     public void deleteItemFromStorage(Long id) {
@@ -146,26 +159,6 @@ public class ItemServiceImpl implements ItemService {
                 .stream()
                 .map(itemMapper::toItemDto)
                 .collect(toList());
-    }
-
-    private void findLastAndNextBookings(ItemDto itemDto, List<BookingDtoShort> bookings, LocalDateTime now) {
-        itemDto.setLastBooking(bookings.stream()
-                .filter(booking -> Objects.equals(booking.getItem().getId(), itemDto.getId()) &&
-                        !booking.getStart().isAfter(now))
-                .reduce((a, b) -> b).orElse(null));
-
-        bookings.stream()
-                .filter(booking -> Objects.equals(booking.getItem().getId(), itemDto.getId()) &&
-                        booking.getStart().isAfter(now))
-                .findFirst().ifPresent(itemDto::setNextBooking);
-    }
-
-
-    private void findComments(ItemDto itemDto, List<Comment> comments) {
-        itemDto.setComments(comments.stream()
-                .filter(comment -> Objects.equals(comment.getItem().getId(), itemDto.getId()))
-                .map(commentMapper::fromCommentToDto)
-                .collect(toList()));
     }
 
     @Transactional

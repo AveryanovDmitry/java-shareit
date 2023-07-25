@@ -17,10 +17,10 @@ public class UserDto {
 
     private Long id;
     @NotBlank(groups = {Create.class})
-    @Size(max = 255)
+    @Size(groups = {Create.class, Update.class}, max = 255)
     private String name;
     @Email(groups = {Create.class, Update.class})
     @NotEmpty(groups = {Create.class})
-    @Size(max = 512)
+    @Size(groups = {Create.class, Update.class}, max = 512)
     private String email;
 }

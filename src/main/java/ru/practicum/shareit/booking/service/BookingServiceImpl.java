@@ -5,7 +5,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingDto;
-import ru.practicum.shareit.booking.dto.BookingDtoCreateNew;
+import ru.practicum.shareit.booking.dto.NewBooking;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.State;
@@ -32,10 +32,10 @@ public class BookingServiceImpl implements BookingService {
     private static final Sort SORT_BY_START_DESC = Sort.by(Sort.Direction.DESC, "start");
 
     @Transactional
-    public BookingDto createBooking(BookingDtoCreateNew newBooking, Long bookerId) {
+    public BookingDto createBooking(NewBooking newBooking, Long bookerId) {
         Item item = validator.validateItemBooking(newBooking.getItemId());
         User user = validator.getBookingUser(bookerId);
-        Booking booking = bookingMapper.fromDtoNewCreateToModel(newBooking);
+        Booking booking = bookingMapper.fromDtoNewToModel(newBooking);
         validator.validBookerAsOwner(bookerId, item);
         booking.setBooker(user);
         booking.setItem(item);
@@ -59,7 +59,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.setStatus(StatusBooking.REJECTED);
         }
-        return bookingMapper.fromBookingToDto(bookingRepository.save(booking));
+        return bookingMapper.fromBookingToDto(booking);
     }
 
     public BookingDto getBookingById(Long bookingId, Long userID) {
