@@ -92,8 +92,8 @@ public class ItemServiceImpl implements ItemService {
                 .collect(groupingBy(comment -> comment.getItem().getId(), toList()));
 
         itemsDto.forEach(itemDto -> {
-            findLastAndNextBookings(itemDto, bookings.getOrDefault(itemDto.getId(), Collections.emptyList())
-                    , LocalDateTime.now());
+            findLastAndNextBookings(itemDto, bookings.getOrDefault(itemDto.getId(), Collections.emptyList()),
+                    LocalDateTime.now());
 
             itemDto.setComments(comments.getOrDefault(itemDto.getId(), Collections.emptyList())
                     .stream()

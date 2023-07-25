@@ -15,6 +15,7 @@ public interface BookingMapper {
     BookingDto fromBookingToDto(Booking booking);
 
     Booking fromDtoNewToModel(NewBooking newBooking);
+
     @Mapping(target = "bookerId", source = "booker.id")
     BookingDtoShort fromDtoToShort(Booking booking);
 }
