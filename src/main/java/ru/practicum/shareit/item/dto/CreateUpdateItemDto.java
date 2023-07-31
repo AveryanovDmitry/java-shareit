@@ -11,12 +11,15 @@ public class CreateUpdateItemDto {
     public interface Create {
     }
 
+    public interface Update {
+    }
+
     @NotBlank(groups = {Create.class})
-    @Size(max = 255)
+    @Size(max = 255, groups = {Create.class, Update.class})
     private String name;
 
     @NotBlank(groups = {Create.class})
-    @Size(max = 1000)
+    @Size(max = 255, groups = {Create.class, Update.class})
     private String description;
 
     @NotNull(groups = {Create.class})

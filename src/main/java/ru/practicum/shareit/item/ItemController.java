@@ -45,7 +45,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@Valid @RequestBody CreateUpdateItemDto itemDto, @PathVariable Long itemId,
+    public ItemDto updateItem(@Validated(CreateUpdateItemDto.Update.class) @RequestBody CreateUpdateItemDto itemDto, @PathVariable Long itemId,
                               @RequestHeader(OWNER_ID) Long userId) {
         log.info("Получен запрос обновления вещи по id");
         return itemService.updateItem(itemDto, itemId, userId);
