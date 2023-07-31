@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.validation.ValidationException;
 import java.util.Map;
 
 @Slf4j
@@ -35,9 +36,9 @@ public class ExceptionsHandler {
         return Map.of("error", exception.getMessage());
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ExceptionHandler({MethodArgumentNotValidException.class, BookingException.class, ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    private Map<String, String> handleBadRequestException(MethodArgumentNotValidException exception) {
+    private Map<String, String> handleBadRequestException(Exception exception) {
         log.debug(exception.getMessage());
         return Map.of("error", exception.getMessage());
     }
