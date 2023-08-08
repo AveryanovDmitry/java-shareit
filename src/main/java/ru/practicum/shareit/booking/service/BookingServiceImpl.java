@@ -83,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
                         StatusBooking.WAITING, SORT_BY_START_DESC);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findAllByBookerIdAndStatus(pageable ,userId,
+                bookings = bookingRepository.findAllByBookerIdAndStatus(pageable, userId,
                         StatusBooking.REJECTED, SORT_BY_START_DESC);
                 break;
             case PAST:

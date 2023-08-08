@@ -22,6 +22,7 @@ public interface BookingRepository extends PagingAndSortingRepository<Booking, L
     @Query(value = "select b from Booking b where b.booker.id = ?1 and b.start < ?2 and b.end > ?2")
     List<Booking> findAllByBookerIdAndStartAfterAndEndBefore(PageRequest pageable,
                                                              Long userId, LocalDateTime now, Sort sort);
+
     List<Booking> findAllByItemOwnerAndStatus(PageRequest pageable, Long id, StatusBooking waiting, Sort sortByStartDesc);
 
     List<Booking> findAllByItemOwnerAndEndBefore(PageRequest pageable, Long owner, LocalDateTime now, Sort sortByStartDesc);

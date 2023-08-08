@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface RequestService {
     RequestWasCreatedDto createRequest(ItemRequestDto request, Long requesterId);
+
     List<RequestWithItemsDto> getRequestsByRequesterId(PageRequest pageRequest, Long requesterId);
 
     List<RequestWithItemsDto> getAllRequestsWithoutRequesterId(PageRequest pageRequest, Long requesterId);
