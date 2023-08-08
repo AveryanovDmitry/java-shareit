@@ -17,7 +17,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Component
 @Transactional(readOnly = true)
-class ValidatorBookingService {
+public class ValidatorBookingService {
     private final ItemRepository itemRepository;
 
     private final UserRepository userRepository;
