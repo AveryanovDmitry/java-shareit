@@ -22,13 +22,6 @@ public class ExceptionsHandler {
                 "errorMessage", exception.getMessage());
     }
 
-    @ExceptionHandler(EmailExeption.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public Map<String, String> handleEmailExceptionHandler(EmailExeption exception) {
-        log.info(exception.getMessage());
-        return Map.of("error", exception.getMessage());
-    }
-
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Map<String, String> handleServerErrorExceptionHandler(Throwable exception) {
