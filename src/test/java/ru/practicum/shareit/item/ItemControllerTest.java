@@ -18,6 +18,7 @@ import ru.practicum.shareit.item.dto.CreateUpdateItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -110,10 +111,7 @@ class ItemControllerTest {
                         .header(userIdHeader, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
-                .andExpectAll(
-                        status().isBadRequest()
-                );
+                .andExpect(status().isBadRequest());
         verify(itemService, times(0)).createItem(any(CreateUpdateItemDto.class), anyLong());
     }
 
@@ -203,7 +201,6 @@ class ItemControllerTest {
                         .header(userIdHeader, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
                 .andExpectAll(
                         status().isBadRequest()
                 );
@@ -219,7 +216,6 @@ class ItemControllerTest {
                         .header(userIdHeader, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
                 .andExpectAll(
                         status().isBadRequest()
                 );
@@ -233,7 +229,6 @@ class ItemControllerTest {
         when(itemService.getItemFromStorage(anyLong(), anyLong())).thenReturn(itemDtoResponse);
         mvc.perform(get("/items/1")
                         .header(userIdHeader, 1))
-                .andDo(print())
                 .andExpectAll(
                         status().isOk(),
                         content().json(objectMapper.writeValueAsString(itemDtoResponse))
@@ -264,6 +259,21 @@ class ItemControllerTest {
         verify(itemService, times(0)).getItemFromStorage(anyLong(), anyLong());
     }
 
+    @SneakyThrows
+    @Test
+    void getPersonalItems() {
+        List<ItemDto> itemListDto = List.of(itemDtoResponse);
+        when(itemService.getAllItemFromStorageByUserId(any(PageRequest.class), anyLong()))
+                .thenReturn(itemListDto);
+        mvc.perform(get("/items")
+                        .param("from", "0")
+                        .param("size", "1")
+                        .header("X-Sharer-User-Id", 1))
+                .andExpectAll(
+                        status().isOk(),
+                        content().json(objectMapper.writeValueAsString(itemListDto))
+                );
+    }
 
     @SneakyThrows
     @Test
@@ -272,12 +282,34 @@ class ItemControllerTest {
                         .param("from", "0")
                         .param("size", "1")
                         .header(userIdHeader, 0))
-                .andExpectAll(
-                        status().isBadRequest()
-                );
-        verify(itemService, times(0)).getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
+                .andExpect(status().isBadRequest());
+        verify(itemService, times(0))
+                .getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
     }
 
+    @SneakyThrows
+    @Test
+    void getPersonalItemsWithIncorrectParamFrom() {
+        mvc.perform(get("/items")
+                        .param("from", "-1")
+                        .param("size", "1")
+                        .header(userIdHeader, 1))
+                .andExpectAll(status().isBadRequest());
+        verify(itemService, times(0))
+                .getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
+    }
+
+    @SneakyThrows
+    @Test
+    void getPersonalItemsWithIncorrectParamSize() {
+        mvc.perform(get("/items")
+                        .param("from", "0")
+                        .param("size", "99999")
+                        .header(userIdHeader, 1))
+                .andExpect(status().isBadRequest());
+        verify(itemService, times(0))
+                .getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
+    }
 
     @SneakyThrows
     @Test
@@ -318,6 +350,28 @@ class ItemControllerTest {
                         status().isBadRequest()
                 );
         verify(itemService, times(0)).searchItemsByText(any(PageRequest.class), anyString());
+    }
+
+    @SneakyThrows
+    @Test
+    void addComment() {
+        CreateCommentDto comment = new CreateCommentDto("comment");
+        CommentDto commentDto = CommentDto.builder()
+                .id(1L)
+                .authorName(item1.getName())
+                .text(comment.getText())
+                .created(LocalDateTime.now())
+                .build();
+
+        when(itemService.addComment(anyLong(), anyLong(), any(CreateCommentDto.class))).thenReturn(commentDto);
+        mvc.perform(post("/items/1/comment")
+                        .header(userIdHeader, 1)
+                        .content(objectMapper.writeValueAsString(comment))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().isOk(),
+                        content().json(objectMapper.writeValueAsString(commentDto))
+                );
     }
 
     @SneakyThrows

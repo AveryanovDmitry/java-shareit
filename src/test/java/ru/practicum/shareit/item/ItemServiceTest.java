@@ -3,17 +3,26 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.StatusBooking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exeptions.BookingException;
 import ru.practicum.shareit.exeptions.NotFoundException;
 import ru.practicum.shareit.item.dto.CreateCommentDto;
 import ru.practicum.shareit.item.dto.CreateUpdateItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.RequestItemRepository;
@@ -25,22 +34,32 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.data.domain.Sort.Direction.DESC;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
 @Sql(scripts = {"file:src/main/resources/schema.sql"})
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
+@ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
     private final ItemService itemService;
     private final UserRepository userRepository;
     private final RequestItemRepository itemRequestRepository;
+    @MockBean
+    private BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
     private CreateUpdateItemDto itemCreate1;
     private CreateUpdateItemDto itemCreate2;
     private CreateUpdateItemDto itemUpdateDto;
     private User user1;
     private User user2;
     private ItemRequest itemRequest1;
+
+    private Booking lastBooking;
+    private Booking nextBooking;
 
     @BeforeEach
     public void setUp() {
@@ -83,6 +102,14 @@ class ItemServiceTest {
     void notExistingUserCreateItem() {
         assertThatThrownBy(() -> itemService.createItem(itemCreate1, 1L))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void notExistingDescription() {
+        userRepository.save(user1);
+        itemCreate1.setDescription(null);
+        assertThatThrownBy(() -> itemService.createItem(itemCreate1, user1.getId()))
+                .isInstanceOf(Exception.class);
     }
 
     @Test
@@ -165,6 +192,36 @@ class ItemServiceTest {
     }
 
     @Test
+    void addComment() {
+        CreateCommentDto commentDto = new CreateCommentDto("Nice item");
+        userRepository.save(user1);
+        userRepository.save(user2);
+        var savedItem1 = itemService.createItem(itemCreate1, user1.getId());
+        createLastAndNextBookings(savedItem1);
+        lastBooking.setStart(LocalDateTime.now().minusDays(2));
+        lastBooking.setEnd(LocalDateTime.now().minusDays(1));
+
+        when(bookingRepository
+                .findAllByItemIdAndBookerIdAndStatus(anyLong(), anyLong(), eq(StatusBooking.APPROVED)
+                        , eq(Sort.by(DESC, "start"))))
+                .thenReturn(List.of(lastBooking));
+
+        var savedComment1 = itemService.addComment(user2.getId(), savedItem1.getId(), commentDto);
+        var comment1 = commentRepository.findById(savedComment1.getId()).get();
+
+        assertThat(savedComment1.getId()).isEqualTo(1L);
+        assertThat(savedComment1.getText()).isEqualTo(commentDto.getText());
+        assertThat(savedComment1.getCreated()).isBefore(LocalDateTime.now());
+        assertThat(savedComment1.getAuthorName()).isEqualTo(user2.getName());
+
+        commentDto.setText("Nice item, awesome author2");
+        var savedComment2 = itemService.addComment(user2.getId(), savedItem1.getId(), commentDto);
+        var comment2 = commentRepository.findById(savedComment2.getId()).get();
+
+        assertThat(comment1.equals(comment2)).isFalse();
+    }
+
+    @Test
     void addCommentWithNotExistingBooks() {
         CreateCommentDto commentDto = new CreateCommentDto("Nice item");
         userRepository.save(user1);
@@ -178,16 +235,43 @@ class ItemServiceTest {
     void addCommentForNotExistingItem() {
         CreateCommentDto commentDto = new CreateCommentDto("Nice item");
         userRepository.save(user1);
-        assertThatThrownBy(() -> itemService.addComment(2L, user1.getId(), commentDto))
+        userRepository.save(user2);
+        var savedItem1 = itemService.createItem(itemCreate1, user1.getId());
+        createLastAndNextBookings(savedItem1);
+        bookingRepository.save(lastBooking);
+        assertThat(lastBooking.equals(nextBooking)).isFalse();
+        assertThatThrownBy(() -> itemService.addComment(2L, user2.getId(), commentDto))
                 .isInstanceOf(NotFoundException.class);
     }
 
     @Test
     void addCommentFromNotExistingUser() {
+
         CreateCommentDto commentDto = new CreateCommentDto("Nice item");
         userRepository.save(user1);
         ItemDto savedItem = itemService.createItem(itemCreate1, user1.getId());
         assertThatThrownBy(() -> itemService.addComment(savedItem.getId(), 50L, commentDto))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    void createLastAndNextBookings(ItemDto argItem) {
+        Item bookingItem = new Item();
+        bookingItem.setId(argItem.getId());
+        bookingItem.setOwner(user1.getId());
+        bookingItem.setName(argItem.getName());
+        bookingItem.setDescription(argItem.getDescription());
+        bookingItem.setAvailable(argItem.getAvailable());
+
+        lastBooking = new Booking();
+        lastBooking.setItem(bookingItem);
+        lastBooking.setBooker(user2);
+        lastBooking.setStatus(StatusBooking.APPROVED);
+
+        nextBooking = new Booking();
+        nextBooking.setStart(LocalDateTime.now().plusDays(1));
+        nextBooking.setEnd(LocalDateTime.now().plusDays(2));
+        nextBooking.setItem(bookingItem);
+        nextBooking.setBooker(user2);
+        nextBooking.setStatus(StatusBooking.APPROVED);
     }
 }

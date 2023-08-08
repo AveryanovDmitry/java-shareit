@@ -185,7 +185,7 @@ public class ItemServiceImpl implements ItemService {
         System.out.println(bookingRepository.findAllByItemIdAndBookerIdAndStatus(itemId, userId,
                 StatusBooking.APPROVED, Sort.by(DESC, "start")));
 
-        System.out.println("---------------" + bookings);
+        System.out.println("---------------" + bookings.size());
         bookings.stream().filter(booking -> booking.getEnd().isBefore(LocalDateTime.now())).findAny().orElseThrow(() ->
                 new BookingException(String.format("Пользователь с id %d не может оставлять комментарии вещи " +
                         "с id %d.", userId, itemId)));
