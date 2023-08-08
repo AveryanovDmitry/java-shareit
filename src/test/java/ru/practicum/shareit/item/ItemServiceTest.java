@@ -202,8 +202,8 @@ class ItemServiceTest {
         lastBooking.setEnd(LocalDateTime.now().minusDays(1));
 
         when(bookingRepository
-                .findAllByItemIdAndBookerIdAndStatus(anyLong(), anyLong(), eq(StatusBooking.APPROVED)
-                        , eq(Sort.by(DESC, "start"))))
+                .findAllByItemIdAndBookerIdAndStatus(anyLong(), anyLong(), eq(StatusBooking.APPROVED),
+                        eq(Sort.by(DESC, "start"))))
                 .thenReturn(List.of(lastBooking));
 
         var savedComment1 = itemService.addComment(user2.getId(), savedItem1.getId(), commentDto);
