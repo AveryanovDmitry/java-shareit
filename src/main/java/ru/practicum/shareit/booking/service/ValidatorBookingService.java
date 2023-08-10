@@ -17,7 +17,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Component
 @Transactional(readOnly = true)
-class ValidatorBookingService {
+public class ValidatorBookingService {
     private final ItemRepository itemRepository;
 
     private final UserRepository userRepository;
@@ -45,9 +45,6 @@ class ValidatorBookingService {
     void validBookerAsOwner(Long bookerId, Item item) {
         if (Objects.equals(bookerId, item.getOwner())) {
             throw new NotFoundException("Владелец вещи не может бронировать свои вещи.");
-        } else if (Boolean.FALSE.equals(item.getAvailable())) {
-            throw new BookingException(String.format("Вещь с id %d не доступна для бронирования.",
-                    item.getId()));
         }
     }
 }
