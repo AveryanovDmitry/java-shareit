@@ -3,8 +3,6 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -43,7 +41,6 @@ import static org.springframework.data.domain.Sort.Direction.DESC;
 @ActiveProfiles("test")
 @Sql(scripts = {"file:src/main/resources/schema.sql"})
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
-@ExtendWith(MockitoExtension.class)
 class ItemServiceTest {
     private final ItemService itemService;
     private final UserRepository userRepository;
@@ -52,41 +49,18 @@ class ItemServiceTest {
     private BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private CreateUpdateItemDto itemCreate1;
-    private CreateUpdateItemDto itemCreate2;
     private CreateUpdateItemDto itemUpdateDto;
     private User user1;
     private User user2;
     private ItemRequest itemRequest1;
     private Booking lastBooking;
     private Booking nextBooking;
-    private ItemDto itemDto;
-
-    private BookingDtoShort bookingDtoShortNext;
-
-    private BookingDtoShort bookingDtoShort1Last;
 
     @BeforeEach
     public void setUp() {
-        bookingDtoShortNext = new BookingDtoShort(1L, new ItemForBookingDto(1L, "item"),
-                1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
-
-        bookingDtoShort1Last = new BookingDtoShort(1L, new ItemForBookingDto(1L, "item"),
-                1, LocalDateTime.now().minusDays(2), LocalDateTime.now().minusDays(1));
-
-        itemDto = ItemDto.builder()
-                .id(1L)
-                .name("item test")
-                .description("item test description")
-                .available(Boolean.TRUE)
-                .build();
         itemCreate1 = CreateUpdateItemDto.builder()
                 .name("item test")
                 .description("item test description")
-                .available(Boolean.TRUE)
-                .build();
-        itemCreate2 = CreateUpdateItemDto.builder()
-                .name("item2 test")
-                .description("item2 test description")
                 .available(Boolean.TRUE)
                 .build();
         itemUpdateDto = CreateUpdateItemDto.builder()
@@ -189,6 +163,48 @@ class ItemServiceTest {
     }
 
     @Test
+    void fromStorageByUserId() {
+        userRepository.save(user1);
+        userRepository.save(user2);
+        ItemDto savedItemDto = itemService.createItem(itemCreate1, user1.getId());
+        CreateCommentDto commentDto = new CreateCommentDto("Nice item");
+
+        createLastAndNextBookings(savedItemDto);
+        when(bookingRepository
+                .findAllByItemOwnerWhereStatusApproved(anyLong(), any(Sort.class)))
+                .thenReturn(List.of(nextBooking, lastBooking));
+
+        when(bookingRepository
+                .findAllByItemIdAndBookerIdAndStatus(anyLong(), anyLong(), eq(StatusBooking.APPROVED),
+                        eq(Sort.by(DESC, "start"))))
+                .thenReturn(List.of(lastBooking));
+
+        itemService.addComment(user2.getId(), savedItemDto.getId(), commentDto);
+
+        List<ItemDto> itemsByUserId = itemService
+                .getAllItemFromStorageByUserId(PageRequest.of(0, 10), user1.getId());
+
+        assertThat(itemsByUserId.get(0).getName()).isEqualTo(itemCreate1.getName());
+        assertThat(itemsByUserId.get(0).getDescription()).isEqualTo(itemCreate1.getDescription());
+        assertThat(itemsByUserId.get(0).getAvailable()).isEqualTo(itemCreate1.getAvailable());
+        assertThat(itemsByUserId.get(0).getNextBooking().getStart().getYear())
+                .isEqualTo(nextBooking.getStart().getYear());
+        assertThat(itemsByUserId.get(0).getNextBooking().getStart().getMonthValue())
+                .isEqualTo(nextBooking.getStart().getMonthValue());
+        assertThat(itemsByUserId.get(0).getNextBooking().getStart().getDayOfMonth())
+                .isEqualTo(nextBooking.getStart().getDayOfMonth());
+        assertThat(itemsByUserId.get(0).getNextBooking().getEnd().getYear())
+                .isEqualTo(nextBooking.getEnd().getYear());
+        assertThat(itemsByUserId.get(0).getNextBooking().getEnd().getMonthValue())
+                .isEqualTo(nextBooking.getEnd().getMonthValue());
+        assertThat(itemsByUserId.get(0).getNextBooking().getEnd().getDayOfMonth())
+                .isEqualTo(nextBooking.getEnd().getDayOfMonth());
+        assertThat(itemsByUserId.get(0).getComments().get(0).getText())
+                .isEqualTo(commentDto.getText());
+    }
+
+
+    @Test
     void searchItemsByText() {
         userRepository.save(user1);
         ItemDto savedItem1 = itemService.createItem(itemCreate1, user1.getId());
@@ -209,7 +225,6 @@ class ItemServiceTest {
     void getFoundItemsWhenSearchTextIsBlank() {
         userRepository.save(user1);
         itemService.createItem(itemCreate1, user1.getId());
-        itemService.createItem(itemCreate2, user1.getId());
         List<ItemDto> findItems = itemService.searchItemsByText(PageRequest.of(0, 2), " ");
         assertThat(findItems).isEmpty();
     }
@@ -221,8 +236,6 @@ class ItemServiceTest {
         userRepository.save(user2);
         ItemDto savedItem1 = itemService.createItem(itemCreate1, user1.getId());
         createLastAndNextBookings(savedItem1);
-        lastBooking.setStart(LocalDateTime.now().minusDays(2));
-        lastBooking.setEnd(LocalDateTime.now().minusDays(1));
 
         when(bookingRepository
                 .findAllByItemIdAndBookerIdAndStatus(anyLong(), anyLong(), eq(StatusBooking.APPROVED),
@@ -238,8 +251,8 @@ class ItemServiceTest {
         assertThat(savedComment1.getAuthorName()).isEqualTo(user2.getName());
 
         commentDto.setText("Nice item, awesome author2");
-        var savedComment2 = itemService.addComment(user2.getId(), savedItem1.getId(), commentDto);
-        var comment2 = commentRepository.findById(savedComment2.getId()).get();
+        CommentDto savedComment2 = itemService.addComment(user2.getId(), savedItem1.getId(), commentDto);
+        Comment comment2 = commentRepository.findById(savedComment2.getId()).get();
 
         assertThat(comment1.equals(comment2)).isFalse();
     }
@@ -261,7 +274,6 @@ class ItemServiceTest {
         userRepository.save(user2);
         var savedItem1 = itemService.createItem(itemCreate1, user1.getId());
         createLastAndNextBookings(savedItem1);
-        bookingRepository.save(lastBooking);
         assertThat(lastBooking.equals(nextBooking)).isFalse();
         assertThatThrownBy(() -> itemService.addComment(2L, user2.getId(), commentDto))
                 .isInstanceOf(NotFoundException.class);
@@ -288,6 +300,8 @@ class ItemServiceTest {
         lastBooking.setItem(bookingItem);
         lastBooking.setBooker(user2);
         lastBooking.setStatus(StatusBooking.APPROVED);
+        lastBooking.setStart(LocalDateTime.now().minusDays(2));
+        lastBooking.setEnd(LocalDateTime.now().minusDays(1));
 
         nextBooking = new Booking();
         nextBooking.setStart(LocalDateTime.now().plusDays(1));

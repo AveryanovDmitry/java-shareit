@@ -102,7 +102,6 @@ public class ItemServiceImpl implements ItemService {
         Map<Long, List<Comment>> comments = commentRepository.findByItemIn(items, Sort.by(DESC, "created"))
                 .stream()
                 .collect(groupingBy(comment -> comment.getItem().getId(), toList()));
-
         itemsDto.forEach(itemDto -> {
             findLastAndNextBookings(itemDto, bookings.getOrDefault(itemDto.getId(), Collections.emptyList()),
                     LocalDateTime.now());
