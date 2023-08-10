@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,8 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.exeptions.NotFoundException;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.repository.RequestItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
@@ -41,14 +44,21 @@ public class ItemServiceImpl implements ItemService {
     private final BookingRepository bookingRepository;
     private final ItemMapper itemMapper;
     private final BookingMapper bookingMapper;
-
     private final CommentMapper commentMapper;
-
     private final CommentRepository commentRepository;
+
+    private final RequestItemRepository requestItemRepository;
 
     @Transactional
     public ItemDto createItem(CreateUpdateItemDto itemDto, Long ownerId) {
         Item item = itemMapper.toItem(itemDto);
+        if (itemDto.getRequestId() != null) {
+            ItemRequest itemRequest = requestItemRepository.findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new NotFoundException(
+                            String.format("Запроса с id=%s не найдено", itemDto.getRequestId())));
+
+            item.setRequest(itemRequest);
+        }
         item.setOwner(userRepository.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Владелец вещи под таким id не найден")).getId());
         return itemMapper.toItemDto(itemRepository.save(item));
@@ -77,8 +87,10 @@ public class ItemServiceImpl implements ItemService {
         return itemDto;
     }
 
-    public List<ItemDto> getAllItemFromStorageByUserId(Long userId) {
-        List<Item> items = itemRepository.findAllByOwnerOrderById(userId);
+    public List<ItemDto> getAllItemFromStorageByUserId(PageRequest pageRequest, Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь под таким id не найдене"));
+        List<Item> items = itemRepository.findAllByOwnerOrderById(pageRequest, userId);
         List<ItemDto> itemsDto = items.stream().map(itemMapper::toItemDto).collect(toList());
 
         Map<Long, List<BookingDtoShort>> bookings = bookingRepository
@@ -90,7 +102,6 @@ public class ItemServiceImpl implements ItemService {
         Map<Long, List<Comment>> comments = commentRepository.findByItemIn(items, Sort.by(DESC, "created"))
                 .stream()
                 .collect(groupingBy(comment -> comment.getItem().getId(), toList()));
-
         itemsDto.forEach(itemDto -> {
             findLastAndNextBookings(itemDto, bookings.getOrDefault(itemDto.getId(), Collections.emptyList()),
                     LocalDateTime.now());
@@ -151,11 +162,11 @@ public class ItemServiceImpl implements ItemService {
         }
     }
 
-    public List<ItemDto> searchItemsByText(String text) {
+    public List<ItemDto> searchItemsByText(PageRequest pageRequest, String text) {
         if (text.isBlank()) {
             return Collections.emptyList();
         }
-        return itemRepository.findAllByNameOrDescriptionContainingIgnoreCase(text)
+        return itemRepository.findAllByNameOrDescriptionContainingIgnoreCase(pageRequest, text)
                 .stream()
                 .map(itemMapper::toItemDto)
                 .collect(toList());
@@ -172,7 +183,6 @@ public class ItemServiceImpl implements ItemService {
                         String.format("Вещь с id %s не найдена", itemId)));
         List<Booking> bookings = bookingRepository.findAllByItemIdAndBookerIdAndStatus(itemId, userId,
                 StatusBooking.APPROVED, Sort.by(DESC, "start"));
-
         bookings.stream().filter(booking -> booking.getEnd().isBefore(LocalDateTime.now())).findAny().orElseThrow(() ->
                 new BookingException(String.format("Пользователь с id %d не может оставлять комментарии вещи " +
                         "с id %d.", userId, itemId)));
