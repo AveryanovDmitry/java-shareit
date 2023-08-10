@@ -10,13 +10,13 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
-class ItemDtoJsonTest {
+class testItemDto {
 
     @Autowired
     private JacksonTester<ItemDto> jsonItemDto;
 
     @Test
-    void testBookingDto() throws Exception {
+    void testItemDto() throws Exception {
         ItemDto itemDto = ItemDto.builder()
                 .name("name")
                 .description("description")

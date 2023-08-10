@@ -82,9 +82,7 @@ class ItemControllerTest {
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpectAll(
-                        status().isBadRequest()
-                );
+                .andExpectAll(status().isBadRequest());
         verify(itemService, times(0)).createItem(any(CreateUpdateItemDto.class), anyLong());
     }
 

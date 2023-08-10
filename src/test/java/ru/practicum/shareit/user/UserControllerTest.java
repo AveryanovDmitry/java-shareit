@@ -71,7 +71,6 @@ class UserControllerTest {
         mvc.perform(post("/users")
                         .content(objectMapper.writeValueAsString(userDtoWithIncorrectName))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(print())
                 .andExpectAll(
                         status().isBadRequest()
                 );

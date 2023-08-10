@@ -13,10 +13,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.dto.BookingDtoShort;
 import ru.practicum.shareit.booking.dto.NewBooking;
 import ru.practicum.shareit.booking.model.StatusBooking;
 import ru.practicum.shareit.booking.service.BookingService;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemForBookingDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
 
@@ -45,6 +47,11 @@ class BookingControllerTests {
 
     @BeforeEach
     public void setUp() {
+        BookingDtoShort next = new BookingDtoShort(1L, new ItemForBookingDto(1L, "item"),
+                1, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2));
+        BookingDtoShort last = new BookingDtoShort(1L, new ItemForBookingDto(1L, "item"),
+                1, LocalDateTime.now().minusDays(2), LocalDateTime.now().minusDays(1));
+
         bookingDto = BookingDto.builder()
                 .id(1L)
                 .booker(UserDto.builder()
@@ -55,6 +62,8 @@ class BookingControllerTests {
                         .name("item test")
                         .description("item test description")
                         .available(Boolean.TRUE)
+                        .nextBooking(next)
+                        .lastBooking(last)
                         .build())
                 .status(StatusBooking.APPROVED)
                 .start(LocalDateTime.now().plusDays(1))
@@ -64,6 +73,34 @@ class BookingControllerTests {
         newBooking = new NewBooking(1L, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(3));
 
         mvc = MockMvcBuilders.standaloneSetup(bookingController).build();
+    }
+
+    @Test
+    void createRequestEndBeforeStart() throws Exception {
+        newBooking.setEnd(LocalDateTime.now().plusDays(1));
+        newBooking.setStart(LocalDateTime.now().plusDays(2));
+        mvc.perform(post("/bookings")
+                        .content(objectMapper.writeValueAsString(newBooking))
+                        .header(OWNER_ID, 1)
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createRequestEndNull() throws Exception {
+        newBooking.setEnd(null);
+        newBooking.setStart(LocalDateTime.now().plusDays(2));
+        mvc.perform(post("/bookings")
+                        .content(objectMapper.writeValueAsString(newBooking))
+                        .header(OWNER_ID, 1)
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -86,7 +123,19 @@ class BookingControllerTests {
                 .andExpect(jsonPath("$.end[2]", is(bookingDto.getEnd().getDayOfMonth())))
                 .andExpect(jsonPath("$.booker.id", is(bookingDto.getBooker().getId())))
                 .andExpect(jsonPath("$.item.id", is(bookingDto.getItem().getId())))
-                .andExpect(jsonPath("$.status", is(bookingDto.getStatus().toString())));
+                .andExpect(jsonPath("$.status", is(bookingDto.getStatus().toString())))
+                .andExpect(jsonPath("$.item.nextBooking.start[0]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getYear())))
+                .andExpect(jsonPath("$.item.nextBooking.start[1]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getMonthValue())))
+                .andExpect(jsonPath("$.item.nextBooking.start[2]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getDayOfMonth())))
+                .andExpect(jsonPath("$.item.nextBooking.end[0]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getYear())))
+                .andExpect(jsonPath("$.item.nextBooking.end[1]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getMonthValue())))
+                .andExpect(jsonPath("$.item.nextBooking.end[2]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getDayOfMonth())));
     }
 
     @Test
@@ -108,7 +157,19 @@ class BookingControllerTests {
                 .andExpect(jsonPath("$.end[2]", is(bookingDto.getEnd().getDayOfMonth())))
                 .andExpect(jsonPath("$.booker.id", is(bookingDto.getBooker().getId())))
                 .andExpect(jsonPath("$.item.id", is(bookingDto.getItem().getId())))
-                .andExpect(jsonPath("$.status", is(bookingDto.getStatus().toString())));
+                .andExpect(jsonPath("$.status", is(bookingDto.getStatus().toString())))
+                .andExpect(jsonPath("$.item.nextBooking.start[0]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getYear())))
+                .andExpect(jsonPath("$.item.nextBooking.start[1]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getMonthValue())))
+                .andExpect(jsonPath("$.item.nextBooking.start[2]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getDayOfMonth())))
+                .andExpect(jsonPath("$.item.nextBooking.end[0]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getYear())))
+                .andExpect(jsonPath("$.item.nextBooking.end[1]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getMonthValue())))
+                .andExpect(jsonPath("$.item.nextBooking.end[2]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getDayOfMonth())));
     }
 
     @Test
@@ -131,7 +192,19 @@ class BookingControllerTests {
                 .andExpect(jsonPath("$.end[2]", is(bookingDto.getEnd().getDayOfMonth())))
                 .andExpect(jsonPath("$.booker.id", is(bookingDto.getBooker().getId())))
                 .andExpect(jsonPath("$.item.id", is(bookingDto.getItem().getId())))
-                .andExpect(jsonPath("$.status", is(bookingDto.getStatus().toString())));
+                .andExpect(jsonPath("$.status", is(bookingDto.getStatus().toString())))
+                .andExpect(jsonPath("$.item.nextBooking.start[0]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getYear())))
+                .andExpect(jsonPath("$.item.nextBooking.start[1]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getMonthValue())))
+                .andExpect(jsonPath("$.item.nextBooking.start[2]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getDayOfMonth())))
+                .andExpect(jsonPath("$.item.nextBooking.end[0]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getYear())))
+                .andExpect(jsonPath("$.item.nextBooking.end[1]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getMonthValue())))
+                .andExpect(jsonPath("$.item.nextBooking.end[2]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getDayOfMonth())));
     }
 
     @Test
@@ -149,7 +222,19 @@ class BookingControllerTests {
                 .andExpect(jsonPath("$[0].end[2]", is(bookingDto.getEnd().getDayOfMonth())))
                 .andExpect(jsonPath("$[0].booker.id", is(bookingDto.getBooker().getId())))
                 .andExpect(jsonPath("$[0].item.id", is(bookingDto.getItem().getId())))
-                .andExpect(jsonPath("$[0].status", is(bookingDto.getStatus().toString())));
+                .andExpect(jsonPath("$[0].status", is(bookingDto.getStatus().toString())))
+                .andExpect(jsonPath("$[0].item.nextBooking.start[0]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getYear())))
+                .andExpect(jsonPath("$[0].item.nextBooking.start[1]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getMonthValue())))
+                .andExpect(jsonPath("$[0].item.nextBooking.start[2]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getDayOfMonth())))
+                .andExpect(jsonPath("$[0].item.nextBooking.end[0]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getYear())))
+                .andExpect(jsonPath("$[0].item.nextBooking.end[1]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getMonthValue())))
+                .andExpect(jsonPath("$[0].item.nextBooking.end[2]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getDayOfMonth())));
     }
 
     @Test
@@ -167,6 +252,18 @@ class BookingControllerTests {
                 .andExpect(jsonPath("$[0].end[2]", is(bookingDto.getEnd().getDayOfMonth())))
                 .andExpect(jsonPath("$[0].booker.id", is(bookingDto.getBooker().getId())))
                 .andExpect(jsonPath("$[0].item.id", is(bookingDto.getItem().getId())))
-                .andExpect(jsonPath("$[0].status", is(bookingDto.getStatus().toString())));
+                .andExpect(jsonPath("$[0].status", is(bookingDto.getStatus().toString())))
+                .andExpect(jsonPath("$[0].item.nextBooking.start[0]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getYear())))
+                .andExpect(jsonPath("$[0].item.nextBooking.start[1]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getMonthValue())))
+                .andExpect(jsonPath("$[0].item.nextBooking.start[2]",
+                        is(bookingDto.getItem().getNextBooking().getStart().getDayOfMonth())))
+                .andExpect(jsonPath("$[0].item.nextBooking.end[0]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getYear())))
+                .andExpect(jsonPath("$[0].item.nextBooking.end[1]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getMonthValue())))
+                .andExpect(jsonPath("$[0].item.nextBooking.end[2]",
+                        is(bookingDto.getItem().getNextBooking().getEnd().getDayOfMonth())));
     }
 }

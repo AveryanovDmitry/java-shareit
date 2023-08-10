@@ -73,9 +73,11 @@ class BookingServiceTest {
         userRepository.save(user2);
         itemRepository.save(item);
         BookingDto savedBooking = bookingService.createBooking(newBooking, user2.getId());
-        assertThat(savedBooking).usingRecursiveComparison()
-                .ignoringFields("start", "end").isEqualTo(savedBooking);
+        BookingDto findBooking = bookingService
+                .getBookingById(savedBooking.getId(), user2.getId());
 
+        assertThat(savedBooking).usingRecursiveComparison()
+                .ignoringFields("start", "end").isEqualTo(findBooking);
     }
 
     @Test
@@ -140,6 +142,17 @@ class BookingServiceTest {
         bookingService.createBooking(newBooking, user2.getId());
         assertThatThrownBy(() -> bookingService.approveOrRejected(user.getId(), true, 99L))
                 .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void approveBookingWhenBookingIsApprove() {
+        userRepository.save(user);
+        userRepository.save(user2);
+        itemRepository.save(item);
+        BookingDto savedBooking = bookingService.createBooking(newBooking, user2.getId());
+        bookingService.approveOrRejected(savedBooking.getId(), true, user.getId());
+        assertThatThrownBy(() -> bookingService.approveOrRejected(savedBooking.getId(), true,
+                user.getId())).isInstanceOf(BookingException.class);
     }
 
     @Test

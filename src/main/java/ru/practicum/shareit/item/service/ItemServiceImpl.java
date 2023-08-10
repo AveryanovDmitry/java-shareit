@@ -88,6 +88,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     public List<ItemDto> getAllItemFromStorageByUserId(PageRequest pageRequest, Long userId) {
+        userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь под таким id не найдене"));
         List<Item> items = itemRepository.findAllByOwnerOrderById(pageRequest, userId);
         List<ItemDto> itemsDto = items.stream().map(itemMapper::toItemDto).collect(toList());
 
@@ -182,10 +184,6 @@ public class ItemServiceImpl implements ItemService {
                         String.format("Вещь с id %s не найдена", itemId)));
         List<Booking> bookings = bookingRepository.findAllByItemIdAndBookerIdAndStatus(itemId, userId,
                 StatusBooking.APPROVED, Sort.by(DESC, "start"));
-        System.out.println(bookingRepository.findAllByItemIdAndBookerIdAndStatus(itemId, userId,
-                StatusBooking.APPROVED, Sort.by(DESC, "start")));
-
-        System.out.println("---------------" + bookings.size());
         bookings.stream().filter(booking -> booking.getEnd().isBefore(LocalDateTime.now())).findAny().orElseThrow(() ->
                 new BookingException(String.format("Пользователь с id %d не может оставлять комментарии вещи " +
                         "с id %d.", userId, itemId)));
