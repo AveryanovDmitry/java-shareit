@@ -162,5 +162,4 @@ class ItemRequestServiceTest {
         assertThat(item1.getDescription()).isEqualTo(itemResponseDto.getDescription());
         assertThat(item1.getAvailable()).isEqualTo(itemResponseDto.getAvailable());
     }
-
 }
