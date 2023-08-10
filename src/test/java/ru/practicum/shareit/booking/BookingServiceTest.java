@@ -81,6 +81,19 @@ class BookingServiceTest {
     }
 
     @Test
+    void createBookingFalseAvailable() {
+        userRepository.save(user);
+        userRepository.save(user2);
+        itemRepository.save(item);
+        BookingDto savedBooking = bookingService.createBooking(newBooking, user2.getId());
+        BookingDto findBooking = bookingService
+                .getBookingById(savedBooking.getId(), user2.getId());
+
+        assertThat(savedBooking).usingRecursiveComparison()
+                .ignoringFields("start", "end").isEqualTo(findBooking);
+    }
+
+    @Test
     void notExistingItem() {
         newBooking.setItemId(2L);
         userRepository.save(user2);
@@ -156,20 +169,31 @@ class BookingServiceTest {
     }
 
     @Test
-    void userIsNotOwner() {
+    void approveBookingWhenUserNotEqualsOwner() {
         userRepository.save(user);
         userRepository.save(user2);
         itemRepository.save(item);
         BookingDto savedBooking = bookingService.createBooking(newBooking, user2.getId());
-        bookingService.approveOrRejected(user.getId(), true, savedBooking.getId());
-        assertThatThrownBy(() -> bookingService.approveOrRejected(user2.getId(), true, savedBooking.getId()))
-                .isInstanceOf(NotFoundException.class);
+
+        assertThatThrownBy(() -> bookingService.approveOrRejected(savedBooking.getId(), false,
+                user2.getId())).isInstanceOf(NotFoundException.class);
     }
 
     @Test
     void getBookingWhenBookingNotFound() {
-        userRepository.save(user2);
         assertThatThrownBy(() -> bookingService.getBookingById(99L, user2.getId()))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void getBookingByIdUserNotBookerOrOwner() {
+        userRepository.save(user);
+        userRepository.save(user2);
+        userRepository.save(new User(3L, "user", "u@ya.ru"));
+        itemRepository.save(item);
+        BookingDto savedBooking = bookingService.createBooking(newBooking, user2.getId());
+
+        assertThatThrownBy(() -> bookingService.getBookingById(savedBooking.getId(), 3L))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -255,6 +279,22 @@ class BookingServiceTest {
         tryCreatePastStart.setStatus(StatusBooking.APPROVED);
         assertThatThrownBy(() -> bookingRepository.save(tryCreatePastStart))
                 .isInstanceOf(ConstraintViolationException.class);
+    }
+
+    @Test
+    void getBookingsOfOwnerPast() {
+        userRepository.save(user);
+        userRepository.save(user2);
+        itemRepository.save(item);
+        itemRepository.save(item2);
+        Map<String, Long> addingBookings = addExtraBookings();
+
+        List<Long> ids = bookingService
+                .getBookingsOfOwner(PageRequest.of(0, 10), user.getId(), "PAST")
+                .stream().map(BookingDto::getId)
+                .collect(Collectors.toList());
+
+        assertThat(ids).hasSize(0);
     }
 
     @Test
@@ -365,6 +405,32 @@ class BookingServiceTest {
     }
 
     @Test
+    void getAllBookingsUserWhenStateIsPast() {
+        userRepository.save(user);
+        userRepository.save(user2);
+        itemRepository.save(item);
+        itemRepository.save(item2);
+        List<Long> ids = bookingService
+                .getAllBookingByUserId(PageRequest.of(0, 10), user2.getId(), "past")
+                .stream().map(BookingDto::getId).collect(Collectors.toList());
+
+        assertThat(ids).hasSize(0);
+    }
+
+    @Test
+    void getAllBookingsUserWhenStateIsCurrent() {
+        userRepository.save(user);
+        userRepository.save(user2);
+        itemRepository.save(item);
+        itemRepository.save(item2);
+        List<Long> ids = bookingService
+                .getAllBookingByUserId(PageRequest.of(0, 10), user2.getId(), "current")
+                .stream().map(BookingDto::getId).collect(Collectors.toList());
+
+        assertThat(ids).hasSize(0);
+    }
+
+    @Test
     void getBookingListWithUnknownState() {
         userRepository.save(user);
         assertThatThrownBy(() -> bookingService.getAllBookingByUserId(PageRequest.of(0, 10),
@@ -372,7 +438,7 @@ class BookingServiceTest {
     }
 
     @Test
-    public void getAllBookingsForUserWhenUserNotFound() {
+    void getAllBookingsForUserWhenUserNotFound() {
         userRepository.save(user);
         assertThatThrownBy(() -> bookingService.getAllBookingByUserId(PageRequest.of(0, 10),
                 50L, "ALL")).isInstanceOf(NotFoundException.class);

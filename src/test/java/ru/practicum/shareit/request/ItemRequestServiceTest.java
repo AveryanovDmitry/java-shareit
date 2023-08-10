@@ -10,9 +10,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import ru.practicum.shareit.exeptions.NotFoundException;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
+import ru.practicum.shareit.request.dto.ItemResponseDto;
 import ru.practicum.shareit.request.dto.RequestWasCreatedDto;
 import ru.practicum.shareit.request.dto.RequestWithItemsDto;
+import ru.practicum.shareit.request.mapper.RequestItemMapper;
 import ru.practicum.shareit.request.service.RequestService;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -30,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ItemRequestServiceTest {
     private final RequestService requestService;
     private final UserRepository userRepository;
+
+    private final RequestItemMapper requestItemMapper;
     private User user1;
     private User user2;
     private ItemRequestDto itemRequestDto;
@@ -83,6 +88,12 @@ class ItemRequestServiceTest {
         RequestWithItemsDto findRequest = requestService.getRequestById(user2.getId(), savedRequest.getId());
 
         assertThat(privateRequests.get(0)).usingRecursiveComparison().isEqualTo(findRequest);
+        assertThat(privateRequests.get(0).getDescription()).isEqualTo(findRequest.getDescription());
+        assertThat(privateRequests.get(0).getCreated().getYear()).isEqualTo(findRequest.getCreated().getYear());
+        assertThat(privateRequests.get(0).getCreated().getMonthValue())
+                .isEqualTo(findRequest.getCreated().getMonthValue());
+        assertThat(privateRequests.get(0).getCreated().getDayOfMonth())
+                .isEqualTo(findRequest.getCreated().getDayOfMonth());
     }
 
     @Test
@@ -95,11 +106,21 @@ class ItemRequestServiceTest {
     void getAllRequestsWithoutRequesterId() {
         userRepository.save(user1);
         userRepository.save(user2);
+
         RequestWasCreatedDto savedRequest = requestService.createRequest(itemRequestDto, user1.getId());
+
         RequestWithItemsDto findRequest = requestService.getRequestById(user1.getId(), savedRequest.getId());
+
         List<RequestWithItemsDto> otherRequest
                 = requestService.getAllRequestsWithoutRequesterId(PageRequest.of(0, 10), user2.getId());
+
         assertThat(otherRequest.get(0)).usingRecursiveComparison().isEqualTo(findRequest);
+        assertThat(otherRequest.get(0).getDescription()).isEqualTo(findRequest.getDescription());
+        assertThat(otherRequest.get(0).getCreated().getYear()).isEqualTo(findRequest.getCreated().getYear());
+        assertThat(otherRequest.get(0).getCreated().getMonthValue())
+                .isEqualTo(findRequest.getCreated().getMonthValue());
+        assertThat(otherRequest.get(0).getCreated().getDayOfMonth())
+                .isEqualTo(findRequest.getCreated().getDayOfMonth());
     }
 
     @Test
@@ -126,4 +147,20 @@ class ItemRequestServiceTest {
         assertThatThrownBy(() -> requestService.getRequestById(savedRequest.getId(), 2L))
                 .isInstanceOf(NotFoundException.class);
     }
+
+    @Test
+    void mapperTest() {
+        Item item1 = Item.builder()
+                .name("Item1 test")
+                .description("item1 test description")
+                .available(Boolean.TRUE)
+                .owner(user2.getId())
+                .build();
+        ItemResponseDto itemResponseDto = requestItemMapper.mapToItemDataForRequestDto(item1);
+
+        assertThat(item1.getName()).isEqualTo(itemResponseDto.getName());
+        assertThat(item1.getDescription()).isEqualTo(itemResponseDto.getDescription());
+        assertThat(item1.getAvailable()).isEqualTo(itemResponseDto.getAvailable());
+    }
+
 }
