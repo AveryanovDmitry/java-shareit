@@ -1,7 +1,6 @@
 package ru.practicum.shareit.request.dto;
 
 import lombok.Data;
-import lombok.extern.jackson.Jacksonized;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
