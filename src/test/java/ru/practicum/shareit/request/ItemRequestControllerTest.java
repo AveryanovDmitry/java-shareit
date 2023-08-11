@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
+import static ru.practicum.shareit.ShareItApp.USER_ID_HEADER;
 
 @WebMvcTest(ItemRequestController.class)
 @AutoConfigureMockMvc

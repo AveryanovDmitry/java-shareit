@@ -21,12 +21,8 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
-
     private final RequestItemRepository requestItemRepository;
-
     private final UserRepository userRepository;
-
-    private final ItemRepository itemRepository;
     private final RequestItemMapper mapperRequest;
 
     public RequestWasCreatedDto createRequest(ItemRequestDto request, Long requesterId) {

@@ -17,7 +17,7 @@ import javax.validation.constraints.Min;
 import java.util.Collection;
 import java.util.List;
 
-import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
+import static ru.practicum.shareit.ShareItApp.USER_ID_HEADER;
 
 @RestController
 @RequestMapping("/items")
@@ -25,7 +25,6 @@ import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
 @Slf4j
 @Validated
 public class ItemController {
-
     private final ItemService itemService;
 
     @PostMapping

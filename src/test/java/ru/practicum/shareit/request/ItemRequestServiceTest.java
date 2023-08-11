@@ -33,7 +33,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class ItemRequestServiceTest {
     private final RequestService requestService;
     private final UserRepository userRepository;
-
     private final RequestItemMapper requestItemMapper;
     private User user1;
     private User user2;
@@ -58,9 +57,11 @@ class ItemRequestServiceTest {
         userRepository.save(user1);
 
         RequestWasCreatedDto savedRequest = requestService.createRequest(itemRequestDto, user1.getId());
+
         RequestWithItemsDto findRequest = requestService.getRequestById(user1.getId(), savedRequest.getId());
 
         assertThat(savedRequest.getDescription()).isEqualTo(findRequest.getDescription());
+        assertThat(savedRequest.getRequester()).isEqualTo(user1.getId());
         assertThat(savedRequest.getCreated().getYear()).isEqualTo(findRequest.getCreated().getYear());
         assertThat(savedRequest.getCreated().getMonth()).isEqualTo(findRequest.getCreated().getMonth());
         assertThat(savedRequest.getCreated().getDayOfMonth()).isEqualTo(findRequest.getCreated().getDayOfMonth());

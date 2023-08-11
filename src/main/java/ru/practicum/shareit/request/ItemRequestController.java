@@ -15,7 +15,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.List;
 
-import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
+import static ru.practicum.shareit.ShareItApp.USER_ID_HEADER;
 
 @RestController
 @RequestMapping(path = "/requests")
