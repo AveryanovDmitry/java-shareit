@@ -12,7 +12,7 @@ import javax.persistence.*;
 @Builder
 @Getter
 @Setter
-@EqualsAndHashCode(exclude = {"name", "description", "available", "owner"})
+@EqualsAndHashCode(exclude = {"name", "description", "available", "owner", "request"})
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

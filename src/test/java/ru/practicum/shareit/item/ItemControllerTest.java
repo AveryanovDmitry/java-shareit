@@ -27,6 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
 
 @WebMvcTest(ItemController.class)
 @AutoConfigureMockMvc
@@ -39,7 +40,6 @@ class ItemControllerTest {
     private ItemDto item1;
     private ItemDto itemDtoResponse;
     private CreateUpdateItemDto itemDtoUpdate;
-    private final String userIdHeader = "X-Sharer-User-Id";
 
     @BeforeEach
     public void setUp() {
@@ -64,7 +64,7 @@ class ItemControllerTest {
     void createItem() throws Exception {
         when(itemService.createItem(any(CreateUpdateItemDto.class), anyLong())).thenReturn(itemDtoResponse);
         mvc.perform(post("/items")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -78,7 +78,7 @@ class ItemControllerTest {
     @Test
     void createItemWithIncorrectUserId() {
         mvc.perform(post("/items")
-                        .header(userIdHeader, 0)
+                        .header(USER_ID_HEADER, 0)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -91,7 +91,7 @@ class ItemControllerTest {
     void createItemWithIncorrectName() {
         item1.setName("  test name");
         mvc.perform(post("/items")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -106,7 +106,7 @@ class ItemControllerTest {
     void createItemWithIncorrectDescription() {
         item1.setDescription("  test description");
         mvc.perform(post("/items")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
@@ -118,7 +118,7 @@ class ItemControllerTest {
     void createItemWithIncorrectAvailable() {
         item1.setAvailable(null);
         mvc.perform(post("/items")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -133,7 +133,7 @@ class ItemControllerTest {
     void createItemWithIncorrectIdRequest() {
         item1.setRequestId(0L);
         mvc.perform(post("/items")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -151,7 +151,7 @@ class ItemControllerTest {
         when(itemService.updateItem(any(CreateUpdateItemDto.class), anyLong(), anyLong())).thenReturn(itemDtoResponse);
         mvc.perform(
                         patch("/items/1")
-                                .header(userIdHeader, 1)
+                                .header(USER_ID_HEADER, 1)
                                 .content(objectMapper.writeValueAsString(item1))
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -165,7 +165,7 @@ class ItemControllerTest {
     @Test
     void updateItemWithIncorrectUserId() {
         mvc.perform(patch("/items/1")
-                        .header(userIdHeader, 0)
+                        .header(USER_ID_HEADER, 0)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -180,7 +180,7 @@ class ItemControllerTest {
     @Test
     void updateItemWithIncorrectItemId() {
         mvc.perform(patch("/items/0")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -196,7 +196,7 @@ class ItemControllerTest {
     void updateItemWithIncorrectName() {
         itemDtoUpdate.setName("    updated name");
         mvc.perform(patch("/items/0")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
@@ -211,7 +211,7 @@ class ItemControllerTest {
     void updateItemWithIncorrectDescription() {
         itemDtoUpdate.setDescription("   updated description");
         mvc.perform(patch("/items/0")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(item1))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
@@ -226,7 +226,7 @@ class ItemControllerTest {
     void getItemById() {
         when(itemService.getItemFromStorage(anyLong(), anyLong())).thenReturn(itemDtoResponse);
         mvc.perform(get("/items/1")
-                        .header(userIdHeader, 1))
+                        .header(USER_ID_HEADER, 1))
                 .andExpectAll(
                         status().isOk(),
                         content().json(objectMapper.writeValueAsString(itemDtoResponse))
@@ -237,7 +237,7 @@ class ItemControllerTest {
     @Test
     void getItemByIdWithIncorrectUserId() {
         mvc.perform(get("/items/1")
-                        .header(userIdHeader, 0))
+                        .header(USER_ID_HEADER, 0))
                 .andDo(print())
                 .andExpectAll(
                         status().isBadRequest()
@@ -249,7 +249,7 @@ class ItemControllerTest {
     @Test
     void getItemByIncorrectId() {
         mvc.perform(get("/items/0")
-                        .header(userIdHeader, 1))
+                        .header(USER_ID_HEADER, 1))
                 .andDo(print())
                 .andExpectAll(
                         status().isBadRequest()
@@ -279,7 +279,7 @@ class ItemControllerTest {
         mvc.perform(get("/items")
                         .param("from", "0")
                         .param("size", "1")
-                        .header(userIdHeader, 0))
+                        .header(USER_ID_HEADER, 0))
                 .andExpect(status().isBadRequest());
         verify(itemService, times(0))
                 .getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
@@ -291,7 +291,7 @@ class ItemControllerTest {
         mvc.perform(get("/items")
                         .param("from", "-1")
                         .param("size", "1")
-                        .header(userIdHeader, 1))
+                        .header(USER_ID_HEADER, 1))
                 .andExpectAll(status().isBadRequest());
         verify(itemService, times(0))
                 .getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
@@ -303,7 +303,7 @@ class ItemControllerTest {
         mvc.perform(get("/items")
                         .param("from", "0")
                         .param("size", "99999")
-                        .header(userIdHeader, 1))
+                        .header(USER_ID_HEADER, 1))
                 .andExpect(status().isBadRequest());
         verify(itemService, times(0))
                 .getAllItemFromStorageByUserId(any(PageRequest.class), anyLong());
@@ -363,7 +363,7 @@ class ItemControllerTest {
 
         when(itemService.addComment(anyLong(), anyLong(), any(CreateCommentDto.class))).thenReturn(commentDto);
         mvc.perform(post("/items/1/comment")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(comment))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpectAll(
@@ -377,7 +377,7 @@ class ItemControllerTest {
     void addCommentWithEmptyText() {
         CreateCommentDto comment = new CreateCommentDto("     ");
         mvc.perform(post("/items/1/comment")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(comment))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -394,7 +394,7 @@ class ItemControllerTest {
                 .text("     ")
                 .build();
         mvc.perform(post("/items/0/comment")
-                        .header(userIdHeader, 1)
+                        .header(USER_ID_HEADER, 1)
                         .content(objectMapper.writeValueAsString(comment))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
@@ -409,7 +409,7 @@ class ItemControllerTest {
     void addCommentWithIncorrectUserId() {
         CommentDto comment = CommentDto.builder().text("     ").build();
         mvc.perform(post("/items/1/comment")
-                        .header(userIdHeader, 0)
+                        .header(USER_ID_HEADER, 0)
                         .content(objectMapper.writeValueAsString(comment))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())

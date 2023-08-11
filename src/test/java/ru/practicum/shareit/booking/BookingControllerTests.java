@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
 
 @ExtendWith(MockitoExtension.class)
 class BookingControllerTests {
@@ -43,7 +44,6 @@ class BookingControllerTests {
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private NewBooking newBooking;
     private BookingDto bookingDto;
-    private static final String OWNER_ID = "X-Sharer-User-Id";
 
     @BeforeEach
     public void setUp() {
@@ -81,7 +81,7 @@ class BookingControllerTests {
         newBooking.setStart(LocalDateTime.now().plusDays(2));
         mvc.perform(post("/bookings")
                         .content(objectMapper.writeValueAsString(newBooking))
-                        .header(OWNER_ID, 1)
+                        .header(USER_ID_HEADER, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -95,7 +95,7 @@ class BookingControllerTests {
         newBooking.setStart(LocalDateTime.now().plusDays(2));
         mvc.perform(post("/bookings")
                         .content(objectMapper.writeValueAsString(newBooking))
-                        .header(OWNER_ID, 1)
+                        .header(USER_ID_HEADER, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -109,7 +109,7 @@ class BookingControllerTests {
 
         mvc.perform(post("/bookings")
                         .content(objectMapper.writeValueAsString(newBooking))
-                        .header(OWNER_ID, 1)
+                        .header(USER_ID_HEADER, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -143,7 +143,7 @@ class BookingControllerTests {
         when(bookingServiceMock.getBookingById(anyLong(), anyLong())).thenReturn(bookingDto);
 
         mvc.perform(get("/bookings/{bookingId}", 1)
-                        .header(OWNER_ID, 1)
+                        .header(USER_ID_HEADER, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -178,7 +178,7 @@ class BookingControllerTests {
 
         mvc.perform(patch("/bookings/{bookingId}", 1)
                         .param("approved", "true")
-                        .header(OWNER_ID, 1)
+                        .header(USER_ID_HEADER, 1)
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
@@ -212,7 +212,7 @@ class BookingControllerTests {
         when(bookingServiceMock.getAllBookingByUserId(any(PageRequest.class), anyLong(), anyString()))
                 .thenReturn(List.of(bookingDto));
 
-        mvc.perform(get("/bookings").header(OWNER_ID, 1))
+        mvc.perform(get("/bookings").header(USER_ID_HEADER, 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].start[0]", is(bookingDto.getStart().getYear())))
                 .andExpect(jsonPath("$[0].start[1]", is(bookingDto.getStart().getMonthValue())))
@@ -242,7 +242,7 @@ class BookingControllerTests {
         when(bookingServiceMock.getBookingsOfOwner(any(PageRequest.class), anyLong(), anyString()))
                 .thenReturn(List.of(bookingDto));
 
-        mvc.perform(get("/bookings/owner").header(OWNER_ID, 1))
+        mvc.perform(get("/bookings/owner").header(USER_ID_HEADER, 1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].start[0]", is(bookingDto.getStart().getYear())))
                 .andExpect(jsonPath("$[0].start[1]", is(bookingDto.getStart().getMonthValue())))

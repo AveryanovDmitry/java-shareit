@@ -147,4 +147,19 @@ class UserControllerTest {
                 );
         verify(userService, times(1)).deleteUserById(1L);
     }
+
+    @Test
+    void updateUserWithIncorrectEmail() throws Exception {
+        UserDto userDtoWithIncorrectEmail = UserDto.builder()
+                .name("test name")
+                .email("incorrect-email@.ru")
+                .build();
+        mvc.perform(patch("/users/1")
+                        .content(objectMapper.writeValueAsString(userDtoWithIncorrectEmail))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpectAll(
+                        status().isBadRequest()
+                );
+        verify(userService, times(0)).updateUserById(any(UserDto.class), anyLong());
+    }
 }

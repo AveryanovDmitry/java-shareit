@@ -17,6 +17,8 @@ import javax.validation.constraints.Min;
 import java.util.Collection;
 import java.util.List;
 
+import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
+
 @RestController
 @RequestMapping("/items")
 @RequiredArgsConstructor
@@ -24,19 +26,17 @@ import java.util.List;
 @Validated
 public class ItemController {
 
-    private static final String OWNER_ID = "X-Sharer-User-Id";
-
     private final ItemService itemService;
 
     @PostMapping
     public ItemDto createItem(@Validated(CreateUpdateItemDto.Create.class) @RequestBody CreateUpdateItemDto itemDto,
-                              @RequestHeader(OWNER_ID) @Min(1) Long ownerId) {
+                              @RequestHeader(USER_ID_HEADER) @Min(1) Long ownerId) {
         log.info("Получен запрос создания новой вещи");
         return itemService.createItem(itemDto, ownerId);
     }
 
     @GetMapping("{id}")
-    public ItemDto getItemByID(@PathVariable @Min(1) Long id, @RequestHeader(OWNER_ID) @Min(1) long userId) {
+    public ItemDto getItemByID(@PathVariable @Min(1) Long id, @RequestHeader(USER_ID_HEADER) @Min(1) long userId) {
         log.info("Получен запрос получения вещи по id");
         return itemService.getItemFromStorage(id, userId);
     }
@@ -50,13 +50,13 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@Validated(CreateUpdateItemDto.Update.class) @RequestBody CreateUpdateItemDto itemDto,
                               @PathVariable @Min(1) Long itemId,
-                              @RequestHeader(OWNER_ID) @Min(1) Long userId) {
+                              @RequestHeader(USER_ID_HEADER) @Min(1) Long userId) {
         log.info("Получен запрос обновления вещи по id");
         return itemService.updateItem(itemDto, itemId, userId);
     }
 
     @GetMapping()
-    public List<ItemDto> getItemByIdOwner(@RequestHeader(OWNER_ID) @Min(1) Long id,
+    public List<ItemDto> getItemByIdOwner(@RequestHeader(USER_ID_HEADER) @Min(1) Long id,
                                           @RequestParam(defaultValue = "0") @Min(0) Integer from,
                                           @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer size) {
         log.info("Получен запрос получения вещи по id владельца");
@@ -72,7 +72,7 @@ public class ItemController {
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto addComment(@RequestHeader(OWNER_ID) @Min(1) long userId,
+    public CommentDto addComment(@RequestHeader(USER_ID_HEADER) @Min(1) long userId,
                                  @PathVariable @Min(1) long itemId,
                                  @RequestBody @Valid CreateCommentDto commentDto) {
         return itemService.addComment(userId, itemId, commentDto);

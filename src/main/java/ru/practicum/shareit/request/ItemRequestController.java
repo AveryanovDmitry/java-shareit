@@ -10,9 +10,12 @@ import ru.practicum.shareit.request.dto.RequestWasCreatedDto;
 import ru.practicum.shareit.request.dto.RequestWithItemsDto;
 import ru.practicum.shareit.request.service.RequestService;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import java.util.List;
+
+import static ru.practicum.shareit.util.Constant.USER_ID_HEADER;
 
 @RestController
 @RequestMapping(path = "/requests")
@@ -22,16 +25,14 @@ public class ItemRequestController {
 
     private final RequestService requestService;
 
-    private static final String OWNER_ID = "X-Sharer-User-Id";
-
     @PostMapping
-    public RequestWasCreatedDto createRequest(@RequestBody ItemRequestDto requestDto,
-                                              @RequestHeader(OWNER_ID) @Min(1) Long senderId) {
+    public RequestWasCreatedDto createRequest(@RequestBody @Valid ItemRequestDto requestDto,
+                                              @RequestHeader(USER_ID_HEADER) @Min(1L) Long senderId) {
         return requestService.createRequest(requestDto, senderId);
     }
 
     @GetMapping
-    public List<RequestWithItemsDto> getRequestsBySenderId(@RequestHeader(OWNER_ID) @Min(1) Long requesterId,
+    public List<RequestWithItemsDto> getRequestsBySenderId(@RequestHeader(USER_ID_HEADER) @Min(1) Long requesterId,
                                                            @RequestParam(defaultValue = "0") @Min(0) Integer from,
                                                            @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer size) {
         return requestService.getRequestsByRequesterId(PageRequest.of(
@@ -39,7 +40,7 @@ public class ItemRequestController {
     }
 
     @GetMapping("all")
-    public List<RequestWithItemsDto> getAllRequests(@RequestHeader(OWNER_ID) @Min(1) Long requesterId,
+    public List<RequestWithItemsDto> getAllRequests(@RequestHeader(USER_ID_HEADER) @Min(1) Long requesterId,
                                                     @RequestParam(defaultValue = "0") @Min(0) Integer from,
                                                     @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer size) {
         return requestService.getAllRequestsWithoutRequesterId(PageRequest.of(
@@ -48,7 +49,7 @@ public class ItemRequestController {
 
     @GetMapping("{requestId}")
     public RequestWithItemsDto getItemRequest(
-            @RequestHeader(OWNER_ID) @Min(1) Long userId,
+            @RequestHeader(USER_ID_HEADER) @Min(1) Long userId,
             @PathVariable @Min(1) Long requestId) {
         return requestService.getRequestById(userId, requestId);
     }

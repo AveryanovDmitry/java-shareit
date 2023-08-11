@@ -18,6 +18,7 @@ public interface RequestItemMapper {
 
     RequestWithItemsDto fromModelToDto(ItemRequest request);
 
+    @Mapping(source = "requester.id", target = "requester")
     RequestWasCreatedDto fromModelToWasCreatedDto(ItemRequest request);
 
     @Mapping(source = "request.id", target = "requestId")
