@@ -18,8 +18,19 @@ public interface RequestItemMapper {
 
     RequestWithItemsDto fromModelToDto(ItemRequest request);
 
-    @Mapping(source = "requester.id", target = "requester")
-    RequestWasCreatedDto fromModelToWasCreatedDto(ItemRequest request);
+    default RequestWasCreatedDto fromModelToWasCreatedDto(ItemRequest request) {
+        if (request == null) {
+            return null;
+        }
+        RequestWasCreatedDto requestWasCreatedDto = new RequestWasCreatedDto();
+
+        requestWasCreatedDto.setRequester(request.getId());
+        requestWasCreatedDto.setId(request.getId());
+        requestWasCreatedDto.setDescription(request.getDescription());
+        requestWasCreatedDto.setCreated(request.getCreated());
+
+        return requestWasCreatedDto;
+    }
 
     @Mapping(source = "request.id", target = "requestId")
     ItemResponseDto mapToItemDataForRequestDto(Item item);
