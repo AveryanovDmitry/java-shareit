@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
@@ -8,6 +9,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Size;
 
 @Data
+@Builder
 public class UserDto {
     public interface Create {
     }

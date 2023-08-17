@@ -1,13 +1,15 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class CreateCommentDto {
-
     @NotBlank
     @Size(max = 1000)
     private String text;
