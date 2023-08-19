@@ -22,7 +22,6 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import javax.validation.ConstraintViolationException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -248,37 +247,6 @@ class BookingServiceTest {
         assertThat(ids.get(1)).isEqualTo(addingBookings.get("rejectedBookingItem"));
         assertThat(ids.get(2)).isEqualTo(addingBookings.get("waitingBookingItem"));
         assertThat(ids.get(3)).isEqualTo(addingBookings.get("currentBookingItem"));
-    }
-
-
-    @Test
-    void tryCreatePastStart() {
-        userRepository.save(user);
-        userRepository.save(user2);
-        itemRepository.save(item);
-        itemRepository.save(item2);
-        addExtraBookings();
-        List<Long> ids = bookingService
-                .getBookingsOfOwner(PageRequest.of(0, 10), user.getId(), "CURRENT")
-                .stream().map(BookingDto::getId)
-                .collect(Collectors.toList());
-
-        List<Long> ids2 = bookingService
-                .getBookingsOfOwner(PageRequest.of(0, 10), user.getId(), "PAST")
-                .stream().map(BookingDto::getId)
-                .collect(Collectors.toList());
-
-        assertThat(ids).isEmpty();
-        assertThat(ids2).isEmpty();
-
-        Booking tryCreatePastStart = new Booking();
-        tryCreatePastStart.setStart(LocalDateTime.now().minusMinutes(1));
-        tryCreatePastStart.setEnd(LocalDateTime.now().plusDays(1));
-        tryCreatePastStart.setItem(item);
-        tryCreatePastStart.setBooker(user2);
-        tryCreatePastStart.setStatus(StatusBooking.APPROVED);
-        assertThatThrownBy(() -> bookingRepository.save(tryCreatePastStart))
-                .isInstanceOf(ConstraintViolationException.class);
     }
 
     @Test

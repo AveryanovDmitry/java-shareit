@@ -11,9 +11,6 @@ import ru.practicum.shareit.item.dto.CreateUpdateItemDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import java.util.Collection;
 import java.util.List;
 
@@ -28,52 +25,52 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto createItem(@Validated(CreateUpdateItemDto.Create.class) @RequestBody CreateUpdateItemDto itemDto,
-                              @RequestHeader(USER_ID_HEADER) @Min(1) Long ownerId) {
+    public ItemDto createItem(@RequestBody CreateUpdateItemDto itemDto,
+                              @RequestHeader(USER_ID_HEADER) Long ownerId) {
         log.info("Получен запрос создания новой вещи");
         return itemService.createItem(itemDto, ownerId);
     }
 
     @GetMapping("{id}")
-    public ItemDto getItemByID(@PathVariable @Min(1) Long id, @RequestHeader(USER_ID_HEADER) @Min(1) long userId) {
+    public ItemDto getItemByID(@PathVariable Long id, @RequestHeader(USER_ID_HEADER) long userId) {
         log.info("Получен запрос получения вещи по id");
         return itemService.getItemFromStorage(id, userId);
     }
 
     @DeleteMapping("{id}")
-    public void deleteItemById(@PathVariable @Min(1) Long id) {
+    public void deleteItemById(@PathVariable Long id) {
         log.info("Получен запрос удаления вещи по id");
         itemService.deleteItemFromStorage(id);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@Validated(CreateUpdateItemDto.Update.class) @RequestBody CreateUpdateItemDto itemDto,
-                              @PathVariable @Min(1) Long itemId,
-                              @RequestHeader(USER_ID_HEADER) @Min(1) Long userId) {
+    public ItemDto updateItem(@RequestBody CreateUpdateItemDto itemDto,
+                              @PathVariable Long itemId,
+                              @RequestHeader(USER_ID_HEADER) Long userId) {
         log.info("Получен запрос обновления вещи по id");
         return itemService.updateItem(itemDto, itemId, userId);
     }
 
     @GetMapping()
-    public List<ItemDto> getItemByIdOwner(@RequestHeader(USER_ID_HEADER) @Min(1) Long id,
-                                          @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                          @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer size) {
+    public List<ItemDto> getItemByIdOwner(@RequestHeader(USER_ID_HEADER) Long id,
+                                          @RequestParam(defaultValue = "0") Integer from,
+                                          @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен запрос получения вещи по id владельца");
         return itemService.getAllItemFromStorageByUserId(PageRequest.of(from / size, size), id);
     }
 
     @GetMapping("/search")
     public Collection<ItemDto> searchItems(@RequestParam(name = "text") String text,
-                                           @RequestParam(defaultValue = "0") @Min(0) Integer from,
-                                           @RequestParam(defaultValue = "10") @Min(1) @Max(20) Integer size) {
+                                           @RequestParam(defaultValue = "0") Integer from,
+                                           @RequestParam(defaultValue = "10") Integer size) {
         log.info("Получен запрос поиска вещи по тексту");
         return itemService.searchItemsByText(PageRequest.of(from / size, size), text);
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto addComment(@RequestHeader(USER_ID_HEADER) @Min(1) long userId,
-                                 @PathVariable @Min(1) long itemId,
-                                 @RequestBody @Valid CreateCommentDto commentDto) {
+    public CommentDto addComment(@RequestHeader(USER_ID_HEADER) long userId,
+                                 @PathVariable long itemId,
+                                 @RequestBody CreateCommentDto commentDto) {
         return itemService.addComment(userId, itemId, commentDto);
     }
 }

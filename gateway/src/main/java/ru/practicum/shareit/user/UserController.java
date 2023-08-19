@@ -3,14 +3,14 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
-@RestController
+@Controller
 @RequestMapping("/users")
 @Validated
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
@@ -18,7 +18,7 @@ public class UserController {
     private final UserClient userClient;
 
     @PostMapping
-    public ResponseEntity<Object> createUser(@Valid @RequestBody UserDto userDto) {
+    public ResponseEntity<Object> createUser(@Validated(UserDto.Create.class) @RequestBody UserDto userDto) {
         return userClient.createUser(userDto);
     }
 
@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @PatchMapping("{id}")
-    public ResponseEntity<Object> updateUser(@RequestBody UserDto userDtoUpdate,
+    public ResponseEntity<Object> updateUser(@Validated(UserDto.Update.class) @RequestBody UserDto userDtoUpdate,
                                              @PathVariable("id") Long userId) {
         return userClient.updateUser(userDtoUpdate, userId);
     }

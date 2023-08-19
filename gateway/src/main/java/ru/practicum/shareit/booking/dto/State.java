@@ -1,7 +1,5 @@
 package ru.practicum.shareit.booking.dto;
 
-import ru.practicum.shareit.exeptions.BookingException;
-
 public enum State {
     ALL,
     CURRENT,
@@ -14,7 +12,7 @@ public enum State {
         try {
             return State.valueOf(source);
         } catch (Exception e) {
-            throw new BookingException(String.format("Unknown state: %S", source));
+            throw new IllegalArgumentException(String.format("Unknown state: %S", source));
         }
     }
 }

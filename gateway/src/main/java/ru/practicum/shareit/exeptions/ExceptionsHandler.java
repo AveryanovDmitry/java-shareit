@@ -13,26 +13,10 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class ExceptionsHandler {
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, String> handleNotFoundExceptionHandler(NotFoundException exception) {
-        log.info(exception.getMessage());
-        return Map.of("error", "Not found",
-                "errorMessage", exception.getMessage());
-    }
-
-    @ExceptionHandler({MethodArgumentNotValidException.class, BookingException.class, ValidationException.class})
+    @ExceptionHandler({MethodArgumentNotValidException.class, ValidationException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     private Map<String, String> handleBadRequestException(Exception exception) {
         log.debug(exception.getMessage());
-        return Map.of("error", exception.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Map<String, String> handleServerErrorExceptionHandler(Throwable exception) {
-        log.info(exception.getMessage());
         return Map.of("error", exception.getMessage());
     }
 }

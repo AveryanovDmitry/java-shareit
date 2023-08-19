@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -19,7 +18,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserDto createUser(@Validated(UserDto.Create.class) @RequestBody UserDto userDto) {
+    public UserDto createUser(@RequestBody UserDto userDto) {
         log.info("Получен запрос на создание пользователя");
         return userService.createUser(userDto);
     }
@@ -31,7 +30,7 @@ public class UserController {
     }
 
     @GetMapping("{id}")
-    public UserDto getUserById(@PathVariable  @Min(0) Long id) {
+    public UserDto getUserById(@PathVariable Long id) {
         log.info("Получен запрос на получение пользователя по id");
         return userService.getUserById(id);
     }
@@ -44,7 +43,7 @@ public class UserController {
     }
 
     @PatchMapping("{id}")
-    public UserDto updateUserById(@Validated(UserDto.Update.class) @RequestBody UserDto user, @PathVariable Long id) {
+    public UserDto updateUserById(@RequestBody UserDto user, @PathVariable Long id) {
         log.info("Получен запрос на обновление пользователя по id");
         return userService.updateUserById(user, id);
     }
